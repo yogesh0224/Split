@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Sign up • Splitly</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+</head>
+<body class="bg-zinc-950 text-white min-h-screen flex items-center">
+  <!-- Toast -->
+  <div id="toast" class="hidden fixed bottom-6 right-6 bg-emerald-600 text-white px-6 py-4 rounded-3xl shadow-2xl flex items-center gap-3 z-50">
+    <i class="fas fa-check-circle"></i>
+    <span id="toastMessage" class="font-medium"></span>
+  </div>
+
+  <div class="max-w-md mx-auto w-full px-6">
+    <div class="bg-zinc-900 rounded-3xl p-10 shadow-2xl">
+      <div class="flex justify-center mb-8">
+        <i class="fas fa-handshake text-6xl text-violet-500"></i>
+      </div>
+      <h1 class="text-4xl font-bold text-center mb-2">Create your account</h1>
+      <p class="text-center text-zinc-400 mb-8">Join thousands of happy splitters</p>
+
+      <input id="username" type="text" placeholder="Username" class="w-full bg-zinc-800 border border-white/10 rounded-2xl px-6 py-4 mb-4 focus:outline-none focus:border-violet-500">
+      <input id="email" type="email" placeholder="Email" class="w-full bg-zinc-800 border border-white/10 rounded-2xl px-6 py-4 mb-4 focus:outline-none focus:border-violet-500">
+      <input id="password" type="password" placeholder="Password" class="w-full bg-zinc-800 border border-white/10 rounded-2xl px-6 py-4 mb-6 focus:outline-none focus:border-violet-500">
+
+      <button onclick="handleSignup()" class="w-full bg-violet-600 hover:bg-violet-500 py-4 rounded-2xl font-semibold text-lg transition">Create Account</button>
+
+      <div class="my-8 flex items-center gap-4">
+        <div class="h-px bg-white/10 flex-1"></div>
+        <span class="text-zinc-500 text-sm">OR</span>
+        <div class="h-px bg-white/10 flex-1"></div>
+      </div>
+
+      <button onclick="googleSignup()" class="w-full border border-white/20 hover:bg-white/5 py-4 rounded-2xl font-medium flex items-center justify-center gap-3 transition">
+        <i class="fab fa-google"></i> Continue with Google
+      </button>
+
+      <p class="text-center mt-8 text-sm text-zinc-400">
+        Already have an account? <a href="login.html" class="text-violet-400 hover:underline">Log in</a>
+      </p>
+    </div>
+  </div>
+
+  <script>
+    function showToast(msg) {
+      const toast = document.getElementById('toast');
+      document.getElementById('toastMessage').textContent = msg;
+      toast.classList.remove('hidden');
+      toast.style.transform = 'translateY(0)';
+      setTimeout(() => {
+        toast.style.transform = 'translateY(80px)';
+        setTimeout(() => toast.classList.add('hidden'), 300);
+      }, 3000);
+    }
+
+    function handleSignup() {
+      const username = document.getElementById('username').value.trim() || "newuser";
+      localStorage.setItem('currentUser', username);
+      localStorage.setItem('currentEmail', document.getElementById('email').value || "user@splitly.com");
+      showToast("Account created successfully! Welcome to Splitly 🎉");
+      setTimeout(() => window.location.href = "dashboard.html", 1500);
+    }
+
+    function googleSignup() {
+      localStorage.setItem('currentUser', "google_user");
+      localStorage.setItem('currentEmail', "you@gmail.com");
+      showToast("Signed in with Google successfully!");
+      setTimeout(() => window.location.href = "dashboard.html", 1500);
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>New Split - Splitly</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50">
+  <div class="max-w-lg mx-auto bg-white mt-10 p-8 rounded-3xl shadow">
+    <h1 class="text-2xl font-bold mb-6">Create New Split</h1>
+    
+    <input id="title" placeholder="Bill title (e.g. Dinner at Thamel)" class="w-full mb-4 px-4 py-3 border rounded-2xl">
+    <input id="total" type="number" placeholder="Total amount (रू)" class="w-full mb-4 px-4 py-3 border rounded-2xl">
+    
+    <button onclick="createSplit()" 
+            class="w-full bg-indigo-600 text-white py-4 rounded-2xl font-medium">Create & Start Inviting</button>
+  </div>
+
+  <script>
+    function createSplit() {
+      const title = document.getElementById('title').value || "Untitled Bill";
+      const total = parseFloat(document.getElementById('total').value) || 1000;
+      
+      let splits = JSON.parse(localStorage.getItem('splits') || '[]');
+      
+      const newSplit = {
+        id: Date.now(),
+        title,
+        total,
+        creator: localStorage.getItem('currentUser'),
+        members: [{ user: localStorage.getItem('currentUser'), accepted: true }],
+        pendingInvites: []
+      };
+      
+      splits.push(newSplit);
+      localStorage.setItem('splits', JSON.stringify(splits));
+      
+      alert('Split created! Now invite people.');
+      window.location.href = `split-detail.html?id=${newSplit.id}`;
+    }
+  </script>
+</body>
+</html>

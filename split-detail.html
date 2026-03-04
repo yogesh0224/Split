@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Split Detail • Splitly</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+</head>
+<body class="bg-zinc-950 text-white">
+  <!-- Navbar (same as before) -->
+  <nav class="fixed top-0 w-full bg-zinc-950/90 backdrop-blur-2xl border-b border-white/10 z-50">
+    <div class="max-w-7xl mx-auto px-6 py-5 flex justify-between items-center">
+      <a href="index.html" class="flex items-center gap-3">
+        <i class="fas fa-handshake text-4xl text-violet-500"></i>
+        <span class="text-3xl font-bold tracking-tighter">Splitly</span>
+      </a>
+      <a href="dashboard.html" class="text-sm font-medium">← Back to Dashboard</a>
+    </div>
+  </nav>
+
+  <!-- Toast -->
+  <div id="toast" class="hidden fixed bottom-6 right-6 bg-emerald-600 text-white px-6 py-4 rounded-3xl shadow-2xl flex items-center gap-3 z-50">
+    <i class="fas fa-check-circle"></i>
+    <span id="toastMessage" class="font-medium"></span>
+  </div>
+
+  <div class="max-w-5xl mx-auto px-6 pt-28">
+    <div id="headerInfo" class="mb-12"></div>
+
+    <!-- Add Expense -->
+    <div class="bg-zinc-900 rounded-3xl p-8 mb-10">
+      <h3 class="font-semibold text-xl mb-6">Add Expense Item</h3>
+      <div class="grid grid-cols-2 gap-6">
+        <input id="itemName" placeholder="Item name (e.g. Pizza)" class="bg-zinc-800 border border-white/10 rounded-2xl px-6 py-4">
+        <input id="itemAmount" type="number" placeholder="Amount (रू)" class="bg-zinc-800 border border-white/10 rounded-2xl px-6 py-4">
+      </div>
+      <button onclick="addExpense()" class="mt-6 bg-emerald-600 hover:bg-emerald-500 px-10 py-3 rounded-2xl font-medium">Add to Split</button>
+    </div>
+
+    <!-- Expenses List -->
+    <h3 class="font-semibold mb-4">Expenses</h3>
+    <div id="expensesList" class="space-y-4 mb-12"></div>
+
+    <!-- Members & Shares -->
+    <h3 class="font-semibold mb-4">Members & Fair Shares</h3>
+    <div id="membersList" class="grid md:grid-cols-2 gap-6"></div>
+
+    <!-- Invite Section -->
+    <div class="mt-16 bg-zinc-900 rounded-3xl p-8">
+      <h3 class="font-semibold mb-4">Invite Friends</h3>
+      <div class="flex gap-4">
+        <input id="inviteUser" placeholder="Username" class="flex-1 bg-zinc-800 border border-white/10 rounded-2xl px-6 py-4">
+        <button onclick="sendInvite()" class="bg-violet-600 px-10 rounded-2xl font-medium">Send Invite</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const id = parseInt(new URLSearchParams(location.search).get('id'));
+    let splits = JSON.parse(localStorage.getItem('splits') || '[]');
+    let split = splits.find(s => s.id === id);
+
+    if (!split) {
+      document.body.innerHTML = `<div class="text-center mt-40 text-red-400 text-2xl">Split not found or access denied.</div>`;
+    } else {
+      renderAll();
+    }
+
+    function renderAll() {
+      // Header
+      document.getElementById('headerInfo').innerHTML = `
+        <div class="flex justify-between items-start">
+          <div>
+            <h1 class="text-5xl font-bold">${split.title}</h1>
+            <p class="text-6xl font-bold text-violet-400 mt-2">रू ${split.total}</p>
+          </div>
+          <div class="text-right">
+            <span class="text-sm bg-emerald-500/10 text-emerald-400 px-5 py-2 rounded-3xl">${split.members.filter(m=>m.accepted).length} members</span>
+          </div>
+        </div>
+      `;
+
+      // Expenses
+      const expList = document.getElementById('expensesList');
+      expList.innerHTML = split.expenses.map((e,i) => `
+        <div class="bg-zinc-900 p-6 rounded-3xl flex justify-between items-center">
+          <span>${e.name}</span>
+          <span class="font-medium">रू ${e.amount}</span>
+        </div>
+      `).join('') || '<p class="text-zinc-500">No expenses yet. Add some above!</p>';
+
+      // Members & live shares
+      const accepted = split.members.filter(m => m.accepted);
+      const share = Math.round(split.total / accepted.length);
+      document.getElementById('membersList').innerHTML = accepted.map(m => `
+        <div class="bg-zinc-900 p-8 rounded-3xl flex justify-between items-center">
+          <div class="flex items-center gap-4">
+            <i class="fas fa-user text-3xl text-violet-400"></i>
+            <div>
+              <div class="font-semibold">${m.user}</div>
+              <div class="text-xs text-emerald-400">✓ Accepted</div>
+            </div>
+          </div>
+          <div class="text-right">
+            <div class="text-3xl font-bold text-emerald-400">रू ${share}</div>
+            <div class="text-xs text-zinc-500">each</div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function addExpense() {
+      const name = document.getElementById('itemName').value || "Item";
+      const amount = parseFloat(document.getElementById('itemAmount').value) || 0;
+      if (!amount) return;
+
+      split.expenses.push({name, amount});
+      split.total = split.expenses.reduce((sum, e) => sum + e.amount, 0);
+      localStorage.setItem('splits', JSON.stringify(splits));
+      renderAll();
+    }
+
+    function showToast(msg) {
+      const toast = document.getElementById('toast');
+      document.getElementById('toastMessage').textContent = msg;
+      toast.classList.remove('hidden');
+      setTimeout(() => toast.classList.add('hidden'), 3000);
+    }
+
+    function sendInvite() {
+      const user = document.getElementById('inviteUser').value.trim();
+      if (!user) return;
+
+      if (!split.pendingInvites.includes(user)) {
+        split.pendingInvites.push(user);
+
+        // Save invite
+        let invites = JSON.parse(localStorage.getItem('allInvites') || '{}');
+        if (!invites[user]) invites[user] = [];
+        invites[user].push({id: split.id, title: split.title, from: localStorage.getItem('currentUser')});
+        localStorage.setItem('allInvites', JSON.stringify(invites));
+
+        localStorage.setItem('splits', JSON.stringify(splits));
+        showToast(`Invitation sent to ${user}!`);
+      }
+    }
+  </script>
+</body>
+</html>
