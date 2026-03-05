@@ -8,13 +8,39 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
 </head>
 <body class="bg-zinc-950 text-white">
-  <!-- Navbar same -->
-  <nav class="fixed top-0 w-full bg-zinc-950/95 backdrop-blur-2xl border-b border-white/10 z-50"> ... (copy from dashboard) </nav>
 
-  <div class="max-w-4xl mx-auto px-6 pt-28">
-    <h1 class="text-5xl font-bold mb-10">Notifications</h1>
-    <div id="notifList" class="space-y-6"></div>
-  </div>
+  <!-- NEW PREMIUM NAVBAR -->
+  <nav class="fixed top-0 w-full bg-zinc-950/95 backdrop-blur-2xl border-b border-white/10 z-50">
+    <div class="max-w-7xl mx-auto px-6 py-5 flex justify-between items-center">
+      <a href="index.html" class="flex items-center gap-3">
+        <i class="fas fa-handshake text-4xl text-violet-500"></i>
+        <span class="text-3xl font-bold tracking-tighter">Splitly</span>
+      </a>
+      <a href="dashboard.html" class="text-sm font-medium">← Dashboard</a>
+      <button onclick="toggleMobileMenu()" class="md:hidden text-3xl"><i class="fas fa-bars"></i></button>
+    </div>
+
+    <!-- Mobile Sliding Menu -->
+    <div id="mobileMenu" class="hidden fixed inset-0 bg-black/70 z-[60] flex justify-end">
+      <div onclick="event.stopImmediatePropagation()" class="bg-zinc-900 w-80 h-full shadow-2xl transform translate-x-full transition-transform duration-300 flex flex-col">
+        <div class="p-6 border-b border-white/10 flex justify-between items-center">
+          <div class="flex items-center gap-3">
+            <i class="fas fa-handshake text-3xl text-violet-500"></i>
+            <span class="text-2xl font-bold">Splitly</span>
+          </div>
+          <button onclick="toggleMobileMenu()" class="text-3xl text-zinc-400"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="flex-1 p-6 space-y-6 text-lg">
+          <a href="index.html" onclick="toggleMobileMenu()" class="flex items-center gap-4">Home</a>
+          <a href="dashboard.html" onclick="toggleMobileMenu()" class="flex items-center gap-4">Dashboard</a>
+          <a href="invites.html" onclick="toggleMobileMenu()" class="flex items-center gap-4">Invites</a>
+        </div>
+        <div class="p-6 border-t border-white/10">
+          <button onclick="logout()" class="w-full py-4 bg-red-600 rounded-3xl font-medium">Logout</button>
+        </div>
+      </div>
+    </div>
+  </nav>
 
   <script>
     // Simple demo notifications (you can expand later with real events)
@@ -32,6 +58,18 @@
         <button onclick="this.parentElement.remove()" class="text-xs bg-white/10 px-6 py-3 rounded-3xl">Mark read</button>
       </div>
     `).join('');
+
+    function toggleMobileMenu() {
+      const menu = document.getElementById('mobileMenu');
+      const drawer = menu.querySelector('div');
+      if (menu.classList.contains('hidden')) {
+        menu.classList.remove('hidden');
+        setTimeout(() => drawer.style.transform = 'translateX(0)', 10);
+      } else {
+        drawer.style.transform = 'translateX(100%)';
+        setTimeout(() => menu.classList.add('hidden'), 300);
+      }
+    }
   </script>
 </body>
 </html>

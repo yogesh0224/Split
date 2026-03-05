@@ -11,7 +11,8 @@
   <div class="max-w-md mx-auto w-full px-6">
     <div class="bg-zinc-900 rounded-3xl p-10 shadow-2xl">
       <h1 class="text-4xl font-bold text-center mb-8">Welcome back</h1>
-      <input id="username" placeholder="Username" class="w-full bg-zinc-800 border border-white/10 rounded-2xl px-6 py-4 mb-6 focus:outline-none focus:border-violet-500">
+      <input id="username" placeholder="Username" class="w-full bg-zinc-800 border border-white/10 rounded-2xl px-6 py-4 mb-4 focus:outline-none focus:border-violet-500">
+      <input id="password" type="password" placeholder="Password" class="w-full bg-zinc-800 border border-white/10 rounded-2xl px-6 py-4 mb-6 focus:outline-none focus:border-violet-500">
       <button onclick="login()" class="w-full bg-white text-black py-4 rounded-2xl font-semibold text-lg hover:bg-violet-500 hover:text-white transition">Log in</button>
       <p class="text-center mt-8 text-sm">Demo users: yogesh, ram, sita, hari</p>
       <p class="text-center mt-4 text-sm text-violet-400">New here? <a href="signup.html" class="underline">Sign up free</a></p>
@@ -20,10 +21,21 @@
 
   <script>
     function login() {
-      const user = document.getElementById('username').value.trim() || "yogesh";
-      localStorage.setItem('currentUser', user);
-      window.location.href = "dashboard.html";
+      const username = document.getElementById('username').value.trim();
+      const password = document.getElementById('password').value;
+      if (!username || !password) {
+        alert("Please enter both username and password");
+        return;
+      }
+      let users = JSON.parse(localStorage.getItem('users') || '[]');
+      const user = users.find(u => u.username === username && u.password === password);
+      if (user) {
+        localStorage.setItem('currentUser', username);
+        window.location.href = "dashboard.html";
+      } else {
+        alert("Invalid username or password");
+      }
     }
-  </script>
+</script>
 </body>
 </html>

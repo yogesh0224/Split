@@ -57,19 +57,33 @@
     }
 
     function handleSignup() {
-      const username = document.getElementById('username').value.trim() || "newuser";
+      const username = document.getElementById('username').value.trim();
+      const email = document.getElementById('email').value.trim();
+      const password = document.getElementById('password').value;
+      if (!username || !password) {
+        showToast("Username and password are required");
+        return;
+      }
+      let users = JSON.parse(localStorage.getItem('users') || '[]');
+      if (users.find(u => u.username === username)) {
+        showToast("Username already exists");
+        return;
+      }
+      users.push({username, email, password});
+      localStorage.setItem('users', JSON.stringify(users));
       localStorage.setItem('currentUser', username);
-      localStorage.setItem('currentEmail', document.getElementById('email').value || "user@splitly.com");
+      localStorage.setItem('currentEmail', email);
       showToast("Account created successfully! Welcome to Splitly 🎉");
       setTimeout(() => window.location.href = "dashboard.html", 1500);
     }
 
     function googleSignup() {
+      // For demo, same as before
       localStorage.setItem('currentUser', "google_user");
       localStorage.setItem('currentEmail', "you@gmail.com");
       showToast("Signed in with Google successfully!");
       setTimeout(() => window.location.href = "dashboard.html", 1500);
     }
-  </script>
+</script>
 </body>
 </html>

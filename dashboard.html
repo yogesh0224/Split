@@ -95,8 +95,42 @@
     <span id="toastMessage" class="font-medium"></span>
   </div>
 
+  <!-- Create Group Modal -->
+  <div id="createModal" class="hidden fixed inset-0 bg-black/70 flex items-center justify-center z-50">
+    <div class="bg-zinc-900 rounded-3xl p-10 shadow-2xl max-w-lg w-full mx-4">
+      <h1 class="text-3xl font-bold mb-8">Create New Group</h1>
+      <div class="space-y-8">
+        <div>
+          <label class="block text-sm text-zinc-400 mb-2">Group Name (e.g. Thamel Flatmates)</label>
+          <input id="title" type="text" placeholder="Thamel Flatmates" class="w-full bg-zinc-800 border border-white/10 rounded-2xl px-6 py-4 focus:outline-none focus:border-violet-500 text-lg">
+        </div>
+        <div>
+          <label class="block text-sm text-zinc-400 mb-2">Initial Amount (रू) – optional</label>
+          <input id="total" type="number" placeholder="0" class="w-full bg-zinc-800 border border-white/10 rounded-2xl px-6 py-4 focus:outline-none focus:border-violet-500 text-lg">
+        </div>
+        <button onclick="createGroup()" class="w-full bg-violet-600 hover:bg-violet-500 py-5 rounded-3xl font-semibold text-lg transition">Create Group</button>
+        <button onclick="closeCreateModal()" class="w-full py-4 rounded-3xl border border-white/20 font-medium">Cancel</button>
+      </div>
+    </div>
+  </div>
+
   <div class="max-w-7xl mx-auto px-6 pt-28 pb-12">
-    <h1 class="text-5xl font-bold mb-10">Your Groups</h1>
+    <!-- Header -->
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+      <div>
+        <h1 class="text-4xl md:text-5xl font-bold">Welcome, <span id="welcomeUser"></span></h1>
+        <p class="text-zinc-400 mt-2">Manage your groups and splits effortlessly.</p>
+      </div>
+      <div class="flex items-center gap-4 w-full md:w-auto">
+        <input id="searchInput" type="text" placeholder="Search groups..." class="flex-1 bg-zinc-800 border border-white/10 rounded-2xl px-6 py-3 focus:outline-none focus:border-violet-500">
+        <button onclick="openCreateModal()" class="bg-violet-600 hover:bg-violet-500 px-6 py-3 rounded-3xl font-semibold text-base transition">+ New Group</button>
+      </div>
+    </div>
+
+    <!-- Stats Overview -->
+    <div id="statsRow" class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12"></div>
+
+    <!-- Groups Container -->
     <div id="groupsContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
   </div>
 
@@ -122,7 +156,7 @@
 
     // Show current user
     const currentUser = localStorage.getItem('currentUser') || "Guest";
-    document.querySelectorAll('#currentUserDisplay, #mobileUserName').forEach(el => {
+    document.querySelectorAll('#currentUserDisplay, #mobileUserName, #welcomeUser').forEach(el => {
       el.textContent = currentUser;
     });
 
@@ -133,40 +167,131 @@
       setTimeout(() => toast.classList.add('hidden'), 3000);
     }
 
-    function loadGroups() {
+    function loadStats() {
+      let groups = JSON.parse(localStorage.getItem('groups') || '[]');
+      const myGroups = groups.filter(g => g.members.some(m => m.user === currentUser && m.accepted));
+      
+      const totalGroups = myGroups.length;
+      const totalSpending = myGroups.reduce((sum, g) => sum + g.total, 0);
+      const totalMembers = myGroups.reduce((sum, g) => sum + g.members.filter(m => m.accepted).length, 0);
+
+      const stats = [
+        { label: 'Total Groups', value: totalGroups, icon: 'fa-users' },
+        { label: 'Total Spending', value: `रू ${totalSpending.toLocaleString()}`, icon: 'fa-wallet' },
+        { label: 'Active Members', value: totalMembers, icon: 'fa-user-friends' }
+      ];
+
+      const container = document.getElementById('statsRow');
+      container.innerHTML = stats.map(stat => `
+        <div class="bg-zinc-900 rounded-3xl p-6 shadow-lg hover:shadow-xl transition-shadow">
+          <div class="flex items-center gap-3 mb-2">
+            <i class="fas ${stat.icon} text-2xl text-violet-400"></i>
+            <span class="text-sm text-zinc-400">${stat.label}</span>
+          </div>
+          <p class="text-3xl font-bold">${stat.value}</p>
+        </div>
+      `).join('');
+    }
+
+    function loadGroups(search = '') {
       let groups = JSON.parse(localStorage.getItem('groups') || '[]');
       const container = document.getElementById('groupsContainer');
       container.innerHTML = '';
 
       const myGroups = groups.filter(g => 
-        g.members.some(m => m.user === currentUser && m.accepted)
+        g.members.some(m => m.user === currentUser && m.accepted) &&
+        g.title.toLowerCase().includes(search.toLowerCase())
       );
 
       if (myGroups.length === 0) {
-        container.innerHTML = `<p class="col-span-3 text-center text-zinc-400 py-20 text-xl">No groups yet.<br>Create your first one!</p>`;
+        container.innerHTML = `
+          <div class="col-span-3 bg-zinc-900 rounded-3xl p-16 text-center shadow-lg">
+            <i class="fas fa-folder-open text-8xl text-zinc-600 mb-6"></i>
+            <p class="text-2xl font-semibold text-zinc-300 mb-4">No groups found</p>
+            <p class="text-zinc-400 mb-6">Get started by creating your first group.</p>
+            <button onclick="openCreateModal()" class="bg-violet-600 hover:bg-violet-500 px-8 py-4 rounded-3xl font-semibold">Create Group</button>
+          </div>`;
         return;
       }
 
       myGroups.forEach(group => {
         const card = document.createElement('div');
-        card.className = "bg-zinc-900 rounded-3xl p-8 hover:scale-[1.03] transition cursor-pointer";
+        card.className = "bg-zinc-900 rounded-3xl p-8 shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all cursor-pointer";
         card.innerHTML = `
-          <div class="flex justify-between items-start">
+          <div class="flex justify-between items-start mb-4">
             <div>
               <h3 class="font-bold text-2xl">${group.title}</h3>
-              <p class="text-4xl font-bold text-violet-400 mt-3">रू ${group.total}</p>
+              <p class="text-sm text-zinc-400">Created by ${group.creator} • Last updated: ${new Date(group.id).toLocaleDateString()}</p>
             </div>
             <div class="text-right">
-              <span class="bg-emerald-500/10 text-emerald-400 text-xs px-5 py-2 rounded-3xl">${group.members.filter(m => m.accepted).length} members</span>
-              <div class="text-xs text-zinc-400 mt-4">${group.type || 'one-time'}</div>
+              <span class="bg-emerald-500/10 text-emerald-400 text-xs px-4 py-1 rounded-full">${group.members.filter(m => m.accepted).length} members</span>
+            </div>
+          </div>
+          <div class="flex items-center justify-between">
+            <p class="text-3xl font-bold text-violet-400">रू ${group.total.toLocaleString()}</p>
+            <div class="flex gap-2">
+              <button onclick="editGroup(${group.id})" class="text-zinc-400 hover:text-violet-400"><i class="fas fa-edit"></i></button>
+              <button onclick="deleteGroup(${group.id})" class="text-zinc-400 hover:text-red-400"><i class="fas fa-trash"></i></button>
             </div>
           </div>
         `;
-        card.onclick = () => window.location.href = `split-detail.html?id=${group.id}`;
+        card.onclick = (e) => {
+          if (!e.target.closest('button')) window.location.href = `split-detail.html?id=${group.id}`;
+        };
         container.appendChild(card);
       });
     }
 
+    function deleteGroup(id) {
+      if (!confirm('Are you sure? This will delete the group permanently.')) return;
+      let groups = JSON.parse(localStorage.getItem('groups') || '[]');
+      groups = groups.filter(g => g.id !== id);
+      localStorage.setItem('groups', JSON.stringify(groups));
+      loadGroups(document.getElementById('searchInput').value);
+      loadStats();
+      showToast('Group deleted');
+    }
+
+    // Placeholder for edit (expand as needed)
+    function editGroup(id) {
+      showToast('Edit functionality coming soon!');
+    }
+
+    function openCreateModal() {
+      document.getElementById('createModal').classList.remove('hidden');
+    }
+
+    function closeCreateModal() {
+      document.getElementById('createModal').classList.add('hidden');
+    }
+
+    function createGroup() {
+      const title = document.getElementById('title').value.trim() || "New Flatmates Group";
+      const total = parseFloat(document.getElementById('total').value) || 0;
+      
+      let groups = JSON.parse(localStorage.getItem('groups') || '[]');
+      const newGroup = {
+        id: Date.now(),
+        title,
+        total,
+        creator: currentUser,
+        members: [{ user: currentUser, accepted: true }],
+        expenses: [],
+        notifications: []
+      };
+      groups.push(newGroup);
+      localStorage.setItem('groups', JSON.stringify(groups));
+      closeCreateModal();
+      loadGroups(document.getElementById('searchInput').value);
+      loadStats();
+      showToast("Group created successfully!");
+    }
+
+    // Search listener
+    document.getElementById('searchInput').addEventListener('input', (e) => loadGroups(e.target.value));
+
+    // Initial load
+    loadStats();
     loadGroups();
   </script>
 </body>
