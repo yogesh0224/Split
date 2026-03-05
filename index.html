@@ -8,60 +8,77 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
   <style>
     .hero-bg { background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%); }
+    .section-card { transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
     .section-card:hover { transform: translateY(-12px); }
   </style>
 </head>
 <body class="bg-zinc-950 text-white overflow-x-hidden">
 
-  <!-- NAVBAR -->
-   <!-- NAVBAR -->
-  <nav class="fixed top-0 w-full bg-zinc-950/90 backdrop-blur-2xl border-b border-white/10 z-50">
+  <!-- PREMIUM NAVBAR -->
+  <nav class="fixed top-0 w-full bg-zinc-950/95 backdrop-blur-2xl border-b border-white/10 z-50">
     <div class="max-w-7xl mx-auto px-6 py-5 flex justify-between items-center">
       <a href="index.html" class="flex items-center gap-3">
         <i class="fas fa-handshake text-4xl text-violet-500"></i>
         <span class="text-3xl font-bold tracking-tighter">Splitly</span>
       </a>
-      
+
       <div class="hidden md:flex gap-10 text-sm font-medium">
-        <a href="#how" class="hover:text-violet-400 transition">How it Works</a>
-        <a href="#features" class="hover:text-violet-400 transition">Features</a>
+        <a href="#how" class="hover:text-violet-400">How it Works</a>
+        <a href="#features" class="hover:text-violet-400">Features</a>
       </div>
 
       <div class="flex items-center gap-4">
         <a href="login.html" class="hidden md:block px-6 py-2.5 text-sm font-medium hover:text-violet-400">Log in</a>
         <a href="signup.html" class="bg-white text-black px-8 py-3 rounded-3xl font-semibold hover:bg-violet-500 hover:text-white transition">Get Started Free</a>
-        
-        <!-- Mobile Hamburger -->
-        <button onclick="toggleMobileMenu()" class="md:hidden text-2xl"><i class="fas fa-bars"></i></button>
+        <button onclick="toggleMobileMenu()" class="md:hidden text-3xl"><i class="fas fa-bars"></i></button>
       </div>
     </div>
-    
-    <!-- Mobile Menu -->
-    <div id="mobileMenu" class="hidden md:hidden bg-zinc-900 border-t border-white/10 py-6 px-6">
-      <a href="#how" class="block py-3 text-lg">How it Works</a>
-      <a href="#features" class="block py-3 text-lg">Features</a>
-      <a href="login.html" class="block py-3 text-lg">Log in</a>
+
+    <!-- Mobile Sliding Menu -->
+    <div id="mobileMenu" class="hidden fixed inset-0 bg-black/70 z-[60] flex justify-end">
+      <div onclick="event.stopImmediatePropagation()" class="bg-zinc-900 w-80 h-full shadow-2xl transform translate-x-full transition-transform duration-300 flex flex-col">
+        <div class="p-6 border-b border-white/10 flex justify-between items-center">
+          <div class="flex items-center gap-3">
+            <i class="fas fa-handshake text-3xl text-violet-500"></i>
+            <span class="text-2xl font-bold">Splitly</span>
+          </div>
+          <button onclick="toggleMobileMenu()" class="text-3xl text-zinc-400"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="flex-1 p-6 space-y-6 text-lg">
+          <a href="#how" onclick="toggleMobileMenu()" class="flex items-center gap-4 hover:text-violet-400">How it Works</a>
+          <a href="#features" onclick="toggleMobileMenu()" class="flex items-center gap-4 hover:text-violet-400">Features</a>
+          <a href="login.html" onclick="toggleMobileMenu()" class="flex items-center gap-4 hover:text-violet-400">Log in</a>
+        </div>
+      </div>
     </div>
   </nav>
 
   <!-- HERO -->
-   <section class="hero-bg pt-32 pb-28 text-center px-6">
+  <section class="hero-bg pt-32 pb-28 text-center px-6">
     <div class="max-w-5xl mx-auto">
-      <h1 class="text-5xl md:text-7xl font-bold leading-none tracking-tighter mb-8">Stop fighting over bills.<br>Start splitting fairly.</h1>
-      <p class="text-xl md:text-2xl text-violet-100 max-w-2xl mx-auto">Create a bill. Invite by username. They accept. Fair shares appear instantly.</p>
-      <a href="signup.html" class="mt-12 inline-block bg-white text-black text-xl font-semibold px-12 py-6 rounded-3xl hover:scale-105 transition">Get Started Free</a>
+      <h1 class="text-5xl md:text-7xl font-bold leading-none tracking-tighter mb-8">
+        Stop fighting over bills.<br>
+        Start splitting fairly.
+      </h1>
+      <p class="text-xl md:text-2xl text-violet-100 max-w-2xl mx-auto">
+        Create a bill once. Invite friends by username. They accept in one tap.<br>
+        Fair shares appear instantly — no math, no drama, no awkward talks.
+      </p>
+      <a href="signup.html" class="mt-12 inline-block bg-white text-black text-xl font-semibold px-12 py-6 rounded-3xl hover:scale-105 transition shadow-2xl">
+        Get Started Free →
+      </a>
     </div>
   </section>
 
   <!-- PROBLEM -->
   <section class="py-24 bg-zinc-900">
     <div class="max-w-4xl mx-auto px-6 text-center">
-      <div class="inline bg-red-500/10 text-red-400 px-6 py-2 rounded-3xl text-sm mb-8">The old way still hurts</div>
-      <h2 class="text-5xl font-bold mb-10">You know the feeling</h2>
+      <div class="inline-flex bg-red-500/10 text-red-400 px-6 py-2 rounded-3xl text-sm mb-8">The old way still hurts</div>
+      <h2 class="text-5xl font-bold mb-10">You know exactly how it feels</h2>
       <div class="grid md:grid-cols-3 gap-8">
-        <div class="bg-zinc-800 p-8 rounded-3xl section-card">“Wait… I only had momos”</div>
-        <div class="bg-zinc-800 p-8 rounded-3xl section-card">Forgetting who paid last time</div>
-        <div class="bg-zinc-800 p-8 rounded-3xl section-card">Everyone ignoring payment requests</div>
+        <div class="bg-zinc-800 p-10 rounded-3xl section-card">"Wait… I only had momos"</div>
+        <div class="bg-zinc-800 p-10 rounded-3xl section-card">Forgetting who paid last time</div>
+        <div class="bg-zinc-800 p-10 rounded-3xl section-card">Ignored payment requests</div>
       </div>
     </div>
   </section>
@@ -71,22 +88,21 @@
     <div class="max-w-6xl mx-auto px-6 text-center">
       <h2 class="text-5xl font-bold mb-4">It really is this simple</h2>
       <p class="text-zinc-400 text-xl mb-16">30 seconds. Zero stress.</p>
-      
       <div class="grid md:grid-cols-3 gap-10">
         <div class="bg-zinc-900 rounded-3xl p-10 section-card">
-          <div class="w-20 h-20 mx-auto bg-violet-500/10 rounded-2xl flex items-center justify-center text-5xl mb-8">1</div>
+          <div class="text-6xl mb-6">1️⃣</div>
           <h3 class="text-3xl font-semibold mb-4">Create the Split</h3>
-          <p class="text-zinc-400">Add title and total amount. That’s it.</p>
+          <p class="text-zinc-400">Add title and total amount</p>
         </div>
         <div class="bg-zinc-900 rounded-3xl p-10 section-card">
-          <div class="w-20 h-20 mx-auto bg-violet-500/10 rounded-2xl flex items-center justify-center text-5xl mb-8">2</div>
+          <div class="text-6xl mb-6">2️⃣</div>
           <h3 class="text-3xl font-semibold mb-4">Invite by Username</h3>
-          <p class="text-zinc-400">Type their username. They get notified instantly.</p>
+          <p class="text-zinc-400">Just type their username</p>
         </div>
         <div class="bg-zinc-900 rounded-3xl p-10 section-card">
-          <div class="w-20 h-20 mx-auto bg-violet-500/10 rounded-2xl flex items-center justify-center text-5xl mb-8">3</div>
+          <div class="text-6xl mb-6">3️⃣</div>
           <h3 class="text-3xl font-semibold mb-4">They Accept → Done</h3>
-          <p class="text-zinc-400">Only accepted members see the bill. Shares update live.</p>
+          <p class="text-zinc-400">Shares update live automatically</p>
         </div>
       </div>
     </div>
@@ -95,45 +111,60 @@
   <!-- FEATURES -->
   <section id="features" class="py-24 bg-zinc-900">
     <div class="max-w-6xl mx-auto px-6">
-      <h2 class="text-5xl font-bold text-center mb-16">Everything you actually need</h2>
+      <h2 class="text-5xl font-bold text-center mb-16">Built for real life</h2>
       <div class="grid md:grid-cols-3 gap-8">
         <div class="bg-zinc-800 p-10 rounded-3xl section-card">
           <i class="fas fa-bolt text-5xl text-violet-400 mb-6"></i>
-          <h3 class="text-2xl font-semibold mb-3">Live Share Calculator</h3>
-          <p class="text-zinc-400">Add items → total and everyone’s share updates instantly.</p>
+          <h3 class="text-2xl font-semibold mb-3">Live Calculator</h3>
+          <p class="text-zinc-400">Add items → everyone’s share updates instantly</p>
         </div>
         <div class="bg-zinc-800 p-10 rounded-3xl section-card">
           <i class="fas fa-user-plus text-5xl text-violet-400 mb-6"></i>
-          <h3 class="text-2xl font-semibold mb-3">Username Invites Only</h3>
-          <p class="text-zinc-400">No emails. No links. Just type a username.</p>
+          <h3 class="text-2xl font-semibold mb-3">Username Invites</h3>
+          <p class="text-zinc-400">No emails. No links. No hassle.</p>
         </div>
         <div class="bg-zinc-800 p-10 rounded-3xl section-card">
           <i class="fas fa-lock text-5xl text-violet-400 mb-6"></i>
-          <h3 class="text-2xl font-semibold mb-3">Private by Design</h3>
-          <p class="text-zinc-400">All data stays in your browser until you’re ready for the backend.</p>
+          <h3 class="text-2xl font-semibold mb-3">Completely Private</h3>
+          <p class="text-zinc-400">Everything stays in your browser</p>
         </div>
       </div>
     </div>
   </section>
 
   <!-- FINAL CTA -->
-  <section class="py-24 bg-gradient-to-b from-zinc-900 to-black">
-    <div class="max-w-3xl mx-auto text-center px-6">
+  <section class="py-24 bg-gradient-to-b from-zinc-900 to-black text-center">
+    <div class="max-w-3xl mx-auto px-6">
       <h2 class="text-5xl font-bold mb-6">Ready to end the bill fights forever?</h2>
       <a href="signup.html" class="inline-block bg-white text-black text-2xl font-semibold px-16 py-7 rounded-3xl hover:scale-110 transition">Create Your First Split — Free</a>
     </div>
   </section>
 
   <footer class="bg-black py-12 text-center text-zinc-500 text-sm">© 2026 Splitly</footer>
-    © 2026 Splitly • Built for people who hate awkward money talks
-  </footer>
 
   <script>
-    function toggleMobileMenu() {
+  function toggleMobileMenu() {
       const menu = document.getElementById('mobileMenu');
-      menu.classList.toggle('hidden');
+      const drawer = menu.querySelector('div');
+      if (menu.classList.contains('hidden')) {
+        menu.classList.remove('hidden');
+        setTimeout(() => drawer.style.transform = 'translateX(0)', 10);
+      } else {
+        drawer.style.transform = 'translateX(100%)';
+        setTimeout(() => menu.classList.add('hidden'), 300);
+      }
     }
-  </script>
-  
+
+  function logout() {
+    localStorage.removeItem('currentUser');
+    window.location.href = "index.html";
+  }
+
+  // Show current user in navbar
+  const currentUser = localStorage.getItem('currentUser') || "Guest";
+  const userDisplays = document.querySelectorAll('#currentUserDisplay, #mobileUserName');
+  userDisplays.forEach(el => el.textContent = currentUser);
+</script>
+
 </body>
 </html>

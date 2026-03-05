@@ -8,69 +8,111 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
 </head>
 <body class="bg-zinc-950 text-white">
-  <!-- NAVBAR (exact match to your screenshot) -->
+
+  <!-- REVISED PREMIUM NAVBAR WITH SLIDING MOBILE MENU -->
   <nav class="fixed top-0 w-full bg-zinc-950/95 backdrop-blur-2xl border-b border-white/10 z-50">
     <div class="max-w-7xl mx-auto px-6 py-5 flex justify-between items-center">
+      
+      <!-- Logo -->
       <a href="index.html" class="flex items-center gap-3">
         <i class="fas fa-handshake text-4xl text-violet-500"></i>
         <span class="text-3xl font-bold tracking-tighter">Splitly</span>
       </a>
-      
+
+      <!-- Desktop Menu -->
       <div class="hidden md:flex gap-10 text-sm font-medium">
-        <a href="index.html" class="hover:text-violet-400">Home</a>
+        <a href="index.html" class="hover:text-violet-400 transition">Home</a>
         <a href="dashboard.html" class="text-violet-400 font-semibold">Dashboard</a>
-        <a href="invites.html" class="hover:text-violet-400">Invites</a>
+        <a href="invites.html" class="hover:text-violet-400 transition">Invites</a>
+        <a href="notifications.html" class="hover:text-violet-400 transition">Notifications</a>
       </div>
 
-      <div class="flex items-center gap-6">
+      <!-- Desktop Right Side -->
+      <div class="hidden md:flex items-center gap-6">
         <span id="currentUserDisplay" class="text-sm font-medium"></span>
-        <a href="create-split.html" 
-           class="bg-violet-600 hover:bg-violet-500 px-6 py-3 rounded-3xl font-semibold flex items-center gap-2 transition">
-          <i class="fas fa-plus"></i> New Split
-        </a>
-        <button onclick="logout()" 
-                class="text-xs bg-white/10 px-5 py-2 rounded-2xl hover:bg-white/20 transition">Logout</button>
+        <button onclick="logout()" class="text-xs bg-white/10 px-5 py-2 rounded-2xl hover:bg-white/20 transition">Logout</button>
+      </div>
+
+      <!-- Mobile Hamburger -->
+      <button onclick="toggleMobileMenu()" class="md:hidden text-3xl">
+        <i class="fas fa-bars"></i>
+      </button>
+    </div>
+
+    <!-- MOBILE SLIDING DRAWER -->
+    <div id="mobileMenu" class="hidden fixed inset-0 bg-black/70 z-[60] flex justify-end">
+      <div onclick="event.stopImmediatePropagation()" 
+           class="bg-zinc-900 w-80 h-full shadow-2xl transform translate-x-full transition-transform duration-300 flex flex-col">
+        
+        <!-- Header -->
+        <div class="p-6 border-b border-white/10 flex items-center justify-between">
+          <div class="flex items-center gap-3">
+            <i class="fas fa-handshake text-3xl text-violet-500"></i>
+            <span class="text-2xl font-bold">Splitly</span>
+          </div>
+          <button onclick="toggleMobileMenu()" class="text-3xl text-zinc-400 hover:text-white">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+
+        <!-- Menu Links -->
+        <div class="flex-1 p-6 space-y-6 text-lg">
+          <a href="index.html" onclick="toggleMobileMenu()" class="flex items-center gap-4 hover:text-violet-400 transition">
+            <i class="fas fa-home w-6"></i> Home
+          </a>
+          <a href="dashboard.html" onclick="toggleMobileMenu()" class="flex items-center gap-4 hover:text-violet-400 transition">
+            <i class="fas fa-chart-line w-6"></i> Dashboard
+          </a>
+          <a href="invites.html" onclick="toggleMobileMenu()" class="flex items-center gap-4 hover:text-violet-400 transition">
+            <i class="fas fa-envelope w-6"></i> Invites
+          </a>
+          <a href="notifications.html" onclick="toggleMobileMenu()" class="flex items-center gap-4 hover:text-violet-400 transition">
+            <i class="fas fa-bell w-6"></i> Notifications
+          </a>
+        </div>
+
+        <!-- User Info & Logout -->
+        <div class="p-6 border-t border-white/10">
+          <div class="flex items-center gap-3 mb-6">
+            <i class="fas fa-user-circle text-4xl text-violet-400"></i>
+            <div>
+              <p id="mobileUserName" class="font-medium"></p>
+              <p class="text-xs text-zinc-400">Logged in</p>
+            </div>
+          </div>
+          <button onclick="logout()" 
+                  class="w-full py-4 bg-red-600/80 hover:bg-red-600 rounded-3xl font-medium transition">
+            Logout
+          </button>
+        </div>
       </div>
     </div>
   </nav>
 
-  <div class="max-w-7xl mx-auto px-6 pt-28 pb-12">
-    <div class="flex justify-between items-end mb-10">
-      <h1 class="text-5xl font-bold">Your Splits</h1>
-    </div>
+  <!-- TOAST -->
+  <div id="toast" class="hidden fixed bottom-6 right-6 bg-emerald-600 text-white px-6 py-4 rounded-3xl shadow-2xl flex items-center gap-3 z-50">
+    <i class="fas fa-check-circle"></i>
+    <span id="toastMessage" class="font-medium"></span>
+  </div>
 
-    <div id="splitsContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+  <div class="max-w-7xl mx-auto px-6 pt-28 pb-12">
+    <h1 class="text-5xl font-bold mb-10">Your Groups</h1>
+    <div id="groupsContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
   </div>
 
   <script>
-    const currentUser = localStorage.getItem('currentUser') || "yogesh";
-    document.getElementById('currentUserDisplay').textContent = currentUser;
-
-    function loadSplits() {
-      let splits = JSON.parse(localStorage.getItem('splits') || '[]');
-      const container = document.getElementById('splitsContainer');
-      container.innerHTML = '';
-
-      const mySplits = splits.filter(s => 
-        s.creator === currentUser || s.members.some(m => m.user === currentUser && m.accepted)
-      );
-
-      if (mySplits.length === 0) {
-        container.innerHTML = `<p class="col-span-3 text-center text-zinc-400 py-20 text-xl">No splits yet.<br>Create your first one above!</p>`;
-        return;
+    // Mobile Menu Functions
+    function toggleMobileMenu() {
+      const menu = document.getElementById('mobileMenu');
+      const drawer = menu.querySelector('div');
+      
+      if (menu.classList.contains('hidden')) {
+        menu.classList.remove('hidden');
+        setTimeout(() => drawer.style.transform = 'translateX(0)', 10);
+      } else {
+        drawer.style.transform = 'translateX(100%)';
+        setTimeout(() => menu.classList.add('hidden'), 300);
       }
-
-      mySplits.forEach(split => {
-        const card = document.createElement('div');
-        card.className = "bg-zinc-900 rounded-3xl p-8 hover:scale-105 transition cursor-pointer";
-        card.innerHTML = `
-          <h3 class="font-bold text-2xl mb-2">${split.title}</h3>
-          <p class="text-4xl font-bold text-violet-400">रू ${split.total}</p>
-          <p class="text-zinc-400 mt-4">${split.members.filter(m => m.accepted).length} members • by ${split.creator}</p>
-        `;
-        card.onclick = () => window.location.href = `split-detail.html?id=${split.id}`;
-        container.appendChild(card);
-      });
     }
 
     function logout() {
@@ -78,7 +120,54 @@
       window.location.href = "index.html";
     }
 
-    loadSplits();
+    // Show current user
+    const currentUser = localStorage.getItem('currentUser') || "Guest";
+    document.querySelectorAll('#currentUserDisplay, #mobileUserName').forEach(el => {
+      el.textContent = currentUser;
+    });
+
+    function showToast(msg) {
+      const toast = document.getElementById('toast');
+      document.getElementById('toastMessage').textContent = msg;
+      toast.classList.remove('hidden');
+      setTimeout(() => toast.classList.add('hidden'), 3000);
+    }
+
+    function loadGroups() {
+      let groups = JSON.parse(localStorage.getItem('groups') || '[]');
+      const container = document.getElementById('groupsContainer');
+      container.innerHTML = '';
+
+      const myGroups = groups.filter(g => 
+        g.members.some(m => m.user === currentUser && m.accepted)
+      );
+
+      if (myGroups.length === 0) {
+        container.innerHTML = `<p class="col-span-3 text-center text-zinc-400 py-20 text-xl">No groups yet.<br>Create your first one!</p>`;
+        return;
+      }
+
+      myGroups.forEach(group => {
+        const card = document.createElement('div');
+        card.className = "bg-zinc-900 rounded-3xl p-8 hover:scale-[1.03] transition cursor-pointer";
+        card.innerHTML = `
+          <div class="flex justify-between items-start">
+            <div>
+              <h3 class="font-bold text-2xl">${group.title}</h3>
+              <p class="text-4xl font-bold text-violet-400 mt-3">रू ${group.total}</p>
+            </div>
+            <div class="text-right">
+              <span class="bg-emerald-500/10 text-emerald-400 text-xs px-5 py-2 rounded-3xl">${group.members.filter(m => m.accepted).length} members</span>
+              <div class="text-xs text-zinc-400 mt-4">${group.type || 'one-time'}</div>
+            </div>
+          </div>
+        `;
+        card.onclick = () => window.location.href = `split-detail.html?id=${group.id}`;
+        container.appendChild(card);
+      });
+    }
+
+    loadGroups();
   </script>
 </body>
 </html>

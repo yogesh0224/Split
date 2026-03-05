@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Notifications • Splitly</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+</head>
+<body class="bg-zinc-950 text-white">
+  <!-- Navbar same -->
+  <nav class="fixed top-0 w-full bg-zinc-950/95 backdrop-blur-2xl border-b border-white/10 z-50"> ... (copy from dashboard) </nav>
+
+  <div class="max-w-4xl mx-auto px-6 pt-28">
+    <h1 class="text-5xl font-bold mb-10">Notifications</h1>
+    <div id="notifList" class="space-y-6"></div>
+  </div>
+
+  <script>
+    // Simple demo notifications (you can expand later with real events)
+    const notifs = [
+      { type: "invite", message: "Ram invited you to 'Thamel Flatmates'", time: "2m ago" },
+      { type: "expense", message: "Sita added 'Electricity bill' – awaiting your approval", time: "1h ago" }
+    ];
+
+    document.getElementById('notifList').innerHTML = notifs.map(n => `
+      <div class="bg-zinc-900 rounded-3xl p-8 flex justify-between">
+        <div>
+          <p class="font-medium">${n.message}</p>
+          <p class="text-xs text-zinc-400">${n.time}</p>
+        </div>
+        <button onclick="this.parentElement.remove()" class="text-xs bg-white/10 px-6 py-3 rounded-3xl">Mark read</button>
+      </div>
+    `).join('');
+  </script>
+</body>
+</html>

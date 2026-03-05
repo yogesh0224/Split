@@ -1,44 +1,156 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>New Split - Splitly</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>New Group • Splitly</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
 </head>
-<body class="bg-gray-50">
-  <div class="max-w-lg mx-auto bg-white mt-10 p-8 rounded-3xl shadow">
-    <h1 class="text-2xl font-bold mb-6">Create New Split</h1>
+<body class="bg-zinc-950 text-white min-h-screen">
+  <!-- Navbar same as before -->
+<!-- REVISED PREMIUM NAVBAR (Copy this entire block into every page) -->
+<nav class="fixed top-0 w-full bg-zinc-950/95 backdrop-blur-2xl border-b border-white/10 z-50">
+  <div class="max-w-7xl mx-auto px-6 py-5 flex justify-between items-center">
     
-    <input id="title" placeholder="Bill title (e.g. Dinner at Thamel)" class="w-full mb-4 px-4 py-3 border rounded-2xl">
-    <input id="total" type="number" placeholder="Total amount (रू)" class="w-full mb-4 px-4 py-3 border rounded-2xl">
-    
-    <button onclick="createSplit()" 
-            class="w-full bg-indigo-600 text-white py-4 rounded-2xl font-medium">Create & Start Inviting</button>
+    <!-- Logo -->
+    <a href="index.html" class="flex items-center gap-3">
+      <i class="fas fa-handshake text-4xl text-violet-500"></i>
+      <span class="text-3xl font-bold tracking-tighter">Splitly</span>
+    </a>
+
+    <!-- Desktop Menu -->
+    <div class="hidden md:flex gap-10 text-sm font-medium">
+      <a href="index.html" class="hover:text-violet-400 transition">Home</a>
+      <a href="dashboard.html" class="hover:text-violet-400 transition">Dashboard</a>
+      <a href="invites.html" class="hover:text-violet-400 transition">Invites</a>
+      <a href="notifications.html" class="hover:text-violet-400 transition">Notifications</a>
+    </div>
+
+    <!-- Right side (desktop) -->
+    <div class="hidden md:flex items-center gap-6">
+      <span id="currentUserDisplay" class="text-sm font-medium"></span>
+      <button onclick="logout()" class="text-xs bg-white/10 px-5 py-2 rounded-2xl hover:bg-white/20 transition">Logout</button>
+    </div>
+
+    <!-- Mobile Hamburger -->
+    <button onclick="toggleMobileMenu()" class="md:hidden text-3xl">
+      <i class="fas fa-bars"></i>
+    </button>
+  </div>
+
+  <!-- MOBILE SLIDING MENU -->
+  <div id="mobileMenu" class="hidden fixed inset-0 bg-black/70 z-[60] flex justify-end">
+    <div onclick="event.stopImmediatePropagation()" 
+         class="bg-zinc-900 w-80 h-full shadow-2xl transform translate-x-full transition-transform duration-300 flex flex-col">
+      
+      <!-- Mobile Menu Header -->
+      <div class="p-6 border-b border-white/10 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <i class="fas fa-handshake text-3xl text-violet-500"></i>
+          <span class="text-2xl font-bold">Splitly</span>
+        </div>
+        <button onclick="toggleMobileMenu()" class="text-3xl text-zinc-400 hover:text-white">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+
+      <!-- Menu Links -->
+      <div class="flex-1 p-6 space-y-6 text-lg">
+        <a href="index.html" onclick="toggleMobileMenu()" class="flex items-center gap-4 hover:text-violet-400 transition">
+          <i class="fas fa-home w-6"></i> Home
+        </a>
+        <a href="dashboard.html" onclick="toggleMobileMenu()" class="flex items-center gap-4 hover:text-violet-400 transition">
+          <i class="fas fa-chart-line w-6"></i> Dashboard
+        </a>
+        <a href="invites.html" onclick="toggleMobileMenu()" class="flex items-center gap-4 hover:text-violet-400 transition">
+          <i class="fas fa-envelope w-6"></i> Invites
+        </a>
+        <a href="notifications.html" onclick="toggleMobileMenu()" class="flex items-center gap-4 hover:text-violet-400 transition">
+          <i class="fas fa-bell w-6"></i> Notifications
+        </a>
+      </div>
+
+      <!-- User & Logout -->
+      <div class="p-6 border-t border-white/10">
+        <div class="flex items-center gap-3 mb-6">
+          <i class="fas fa-user-circle text-4xl text-violet-400"></i>
+          <div>
+            <p id="mobileUserName" class="font-medium"></p>
+            <p class="text-xs text-zinc-400">Logged in</p>
+          </div>
+        </div>
+        <button onclick="logout()" 
+                class="w-full py-4 bg-red-600/80 hover:bg-red-600 rounded-3xl font-medium transition">
+          Logout
+        </button>
+      </div>
+    </div>
+  </div>
+</nav>
+
+  <div class="max-w-lg mx-auto pt-32 px-6">
+    <div class="bg-zinc-900 rounded-3xl p-10 shadow-2xl">
+      <h1 class="text-3xl font-bold mb-8">Create New Group</h1>
+      <div class="space-y-8">
+        <div>
+          <label class="block text-sm text-zinc-400 mb-2">Group Name (e.g. Thamel Flatmates)</label>
+          <input id="title" type="text" placeholder="Thamel Flatmates" class="w-full bg-zinc-800 border border-white/10 rounded-2xl px-6 py-4 focus:outline-none focus:border-violet-500 text-lg">
+        </div>
+        <div>
+          <label class="block text-sm text-zinc-400 mb-2">Initial Amount (रू) – optional</label>
+          <input id="total" type="number" placeholder="0" class="w-full bg-zinc-800 border border-white/10 rounded-2xl px-6 py-4 focus:outline-none focus:border-violet-500 text-lg">
+        </div>
+        <button onclick="createGroup()" class="w-full bg-violet-600 hover:bg-violet-500 py-5 rounded-3xl font-semibold text-lg transition">Create Group</button>
+      </div>
+    </div>
   </div>
 
   <script>
-    function createSplit() {
-      const title = document.getElementById('title').value || "Untitled Bill";
-      const total = parseFloat(document.getElementById('total').value) || 1000;
+    function createGroup() {
+      const title = document.getElementById('title').value.trim() || "New Flatmates Group";
+      const total = parseFloat(document.getElementById('total').value) || 0;
       
-      let splits = JSON.parse(localStorage.getItem('splits') || '[]');
-      
-      const newSplit = {
+      let groups = JSON.parse(localStorage.getItem('groups') || '[]'); // renamed from splits
+      const newGroup = {
         id: Date.now(),
         title,
         total,
         creator: localStorage.getItem('currentUser'),
         members: [{ user: localStorage.getItem('currentUser'), accepted: true }],
-        pendingInvites: []
+        expenses: [],
+        notifications: [] // new for this group
       };
+      groups.push(newGroup);
+      localStorage.setItem('groups', JSON.stringify(groups));
       
-      splits.push(newSplit);
-      localStorage.setItem('splits', JSON.stringify(splits));
-      
-      alert('Split created! Now invite people.');
-      window.location.href = `split-detail.html?id=${newSplit.id}`;
+      window.location.href = `split-detail.html?id=${newGroup.id}`;
     }
+
+  function toggleMobileMenu() {
+    const menu = document.getElementById('mobileMenu');
+    const isOpen = !menu.classList.contains('hidden');
+    
+    if (isOpen) {
+      menu.querySelector('div').style.transform = 'translateX(100%)';
+      setTimeout(() => menu.classList.add('hidden'), 300);
+    } else {
+      menu.classList.remove('hidden');
+      setTimeout(() => {
+        menu.querySelector('div').style.transform = 'translateX(0)';
+      }, 10);
+    }
+  }
+
+  function logout() {
+    localStorage.removeItem('currentUser');
+    window.location.href = "index.html";
+  }
+
+  // Show current user in navbar
+  const currentUser = localStorage.getItem('currentUser') || "Guest";
+  const userDisplays = document.querySelectorAll('#currentUserDisplay, #mobileUserName');
+  userDisplays.forEach(el => el.textContent = currentUser);
   </script>
 </body>
 </html>

@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
@@ -9,143 +8,327 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
 </head>
 <body class="bg-zinc-950 text-white">
-  <!-- Navbar (same as before) -->
-  <nav class="fixed top-0 w-full bg-zinc-950/90 backdrop-blur-2xl border-b border-white/10 z-50">
+
+  <!-- NAVBAR -->
+  <nav class="fixed top-0 w-full bg-zinc-950/95 backdrop-blur-2xl border-b border-white/10 z-50">
     <div class="max-w-7xl mx-auto px-6 py-5 flex justify-between items-center">
       <a href="index.html" class="flex items-center gap-3">
         <i class="fas fa-handshake text-4xl text-violet-500"></i>
         <span class="text-3xl font-bold tracking-tighter">Splitly</span>
       </a>
-      <a href="dashboard.html" class="text-sm font-medium">← Back to Dashboard</a>
+      <a href="dashboard.html" class="text-sm font-medium">← Dashboard</a>
+      <a href="notifications.html" class="relative text-2xl"><i class="fas fa-bell"></i><span id="notifBadge" class="absolute -top-1 -right-1 bg-red-500 text-[10px] rounded-full h-5 w-5 flex items-center justify-center">3</span></a>
     </div>
   </nav>
 
-  <!-- Toast -->
+  <!-- TOAST -->
   <div id="toast" class="hidden fixed bottom-6 right-6 bg-emerald-600 text-white px-6 py-4 rounded-3xl shadow-2xl flex items-center gap-3 z-50">
     <i class="fas fa-check-circle"></i>
     <span id="toastMessage" class="font-medium"></span>
   </div>
 
-  <div class="max-w-5xl mx-auto px-6 pt-28">
+  <!-- FLAG MODAL (no prompt!) -->
+  <div id="flagModal" class="hidden fixed inset-0 bg-black/70 flex items-center justify-center z-50">
+    <div class="bg-zinc-900 rounded-3xl p-8 max-w-md w-full mx-4">
+      <h3 class="text-xl font-semibold mb-4">Flag Expense</h3>
+      <textarea id="flagRemark" rows="4" placeholder="Why are you flagging this? (visible to everyone)" class="w-full bg-zinc-800 border border-white/10 rounded-2xl px-6 py-4 focus:outline-none focus:border-red-500"></textarea>
+      <div class="flex gap-4 mt-8">
+        <button onclick="closeFlagModal()" class="flex-1 py-4 rounded-3xl border border-white/20 font-medium">Cancel</button>
+        <button onclick="submitFlag()" class="flex-1 py-4 rounded-3xl bg-red-600 font-medium">Flag Expense</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="max-w-6xl mx-auto px-6 pt-28 pb-20">
+    <!-- HEADER -->
     <div id="headerInfo" class="mb-12"></div>
 
-    <!-- Add Expense -->
-    <div class="bg-zinc-900 rounded-3xl p-8 mb-10">
-      <h3 class="font-semibold text-xl mb-6">Add Expense Item</h3>
-      <div class="grid grid-cols-2 gap-6">
-        <input id="itemName" placeholder="Item name (e.g. Pizza)" class="bg-zinc-800 border border-white/10 rounded-2xl px-6 py-4">
-        <input id="itemAmount" type="number" placeholder="Amount (रू)" class="bg-zinc-800 border border-white/10 rounded-2xl px-6 py-4">
-      </div>
-      <button onclick="addExpense()" class="mt-6 bg-emerald-600 hover:bg-emerald-500 px-10 py-3 rounded-2xl font-medium">Add to Split</button>
+    <!-- Split Type Toggle -->
+    <div class="flex justify-center mb-10 bg-zinc-900 rounded-3xl p-1 w-fit mx-auto">
+      <button onclick="toggleSplitType(0)" id="typeBtn0" class="tab-btn px-8 py-3 rounded-3xl font-medium">One-time Split</button>
+      <button onclick="toggleSplitType(1)" id="typeBtn1" class="tab-btn px-8 py-3 rounded-3xl font-medium">Ongoing (Flatmates)</button>
     </div>
 
-    <!-- Expenses List -->
-    <h3 class="font-semibold mb-4">Expenses</h3>
-    <div id="expensesList" class="space-y-4 mb-12"></div>
+    <!-- TABS -->
+    <div class="flex border-b border-white/10 mb-10">
+      <button onclick="switchTab(0)" id="tab0" class="tab-btn active px-8 py-4 font-semibold border-b-2 border-violet-500">Expenses</button>
+      <button onclick="switchTab(1)" id="tab1" class="tab-btn px-8 py-4 font-semibold">Summary</button>
+      <button onclick="switchTab(2)" id="tab2" class="tab-btn px-8 py-4 font-semibold">Members & Shares</button>
+      <button onclick="switchTab(3)" id="tab3" class="tab-btn px-8 py-4 font-semibold">Invite</button>
+    </div>
 
-    <!-- Members & Shares -->
-    <h3 class="font-semibold mb-4">Members & Fair Shares</h3>
-    <div id="membersList" class="grid md:grid-cols-2 gap-6"></div>
+    <!-- TAB CONTENTS -->
 
-    <!-- Invite Section -->
-    <div class="mt-16 bg-zinc-900 rounded-3xl p-8">
-      <h3 class="font-semibold mb-4">Invite Friends</h3>
-      <div class="flex gap-4">
-        <input id="inviteUser" placeholder="Username" class="flex-1 bg-zinc-800 border border-white/10 rounded-2xl px-6 py-4">
-        <button onclick="sendInvite()" class="bg-violet-600 px-10 rounded-2xl font-medium">Send Invite</button>
+    <!-- EXPENSES TAB -->
+    <div id="content0">
+      <!-- Add Expense Form -->
+      <div class="bg-zinc-900 rounded-3xl p-8 mb-12">
+        <h3 class="font-semibold text-xl mb-6 flex items-center gap-3"><i class="fas fa-plus"></i> Add New Expense</h3>
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+          <input id="expenseName" placeholder="Expense description" class="bg-zinc-800 border border-white/10 rounded-2xl px-6 py-4 text-lg">
+          <input id="expenseAmount" type="number" placeholder="Amount (रू)" class="bg-zinc-800 border border-white/10 rounded-2xl px-6 py-4 text-lg">
+          <input id="expenseDate" type="date" class="bg-zinc-800 border border-white/10 rounded-2xl px-6 py-4 text-lg">
+          <button onclick="addExpense()" class="bg-emerald-600 hover:bg-emerald-500 rounded-3xl font-semibold text-lg">Add Expense</button>
+        </div>
+      </div>
+
+      <!-- Expense List -->
+      <div id="expensesList" class="space-y-8"></div>
+    </div>
+
+    <!-- SUMMARY TAB -->
+    <div id="content1" class="hidden">
+      <div class="bg-zinc-900 rounded-3xl p-12 text-center">
+        <h3 class="text-3xl font-bold mb-4">Monthly / Total Overview</h3>
+        <div id="summaryBox" class="text-7xl font-bold text-violet-400">रू 0</div>
+        <p id="fairShareText" class="text-xl text-zinc-400 mt-4"></p>
+      </div>
+    </div>
+
+    <!-- MEMBERS & SHARES TAB (with Uneven Split support) -->
+    <div id="content2" class="hidden">
+      <div class="flex justify-between items-center mb-8">
+        <h3 class="font-semibold text-2xl">Members & Shares</h3>
+        <button onclick="toggleUnevenMode()" id="unevenBtn" class="px-6 py-3 rounded-3xl bg-white/10 text-sm font-medium">Switch to Uneven Split</button>
+      </div>
+      <div id="membersList" class="grid md:grid-cols-2 gap-6"></div>
+    </div>
+
+    <!-- INVITE TAB -->
+    <div id="content3" class="hidden">
+      <div class="bg-zinc-900 rounded-3xl p-8">
+        <h3 class="font-semibold text-xl mb-6">Invite Members by Username</h3>
+        <div class="flex gap-4">
+          <input id="inviteUsername" placeholder="e.g. ram" class="flex-1 bg-zinc-800 border border-white/10 rounded-2xl px-6 py-4">
+          <button onclick="sendInvite()" class="bg-violet-600 px-12 rounded-3xl font-medium">Send Invite</button>
+        </div>
+        <p class="text-xs text-zinc-400 mt-4">They must accept before they can see expenses or add new ones.</p>
       </div>
     </div>
   </div>
 
   <script>
-    const id = parseInt(new URLSearchParams(location.search).get('id'));
-    let splits = JSON.parse(localStorage.getItem('splits') || '[]');
-    let split = splits.find(s => s.id === id);
+    const groupId = parseInt(new URLSearchParams(location.search).get('id'));
+    let groups = JSON.parse(localStorage.getItem('groups') || '[]');
+    let group = groups.find(g => g.id === groupId);
+    let currentUser = localStorage.getItem('currentUser');
+    let unevenMode = false;
+    let currentFlagId = null;
 
-    if (!split) {
-      document.body.innerHTML = `<div class="text-center mt-40 text-red-400 text-2xl">Split not found or access denied.</div>`;
+    if (!group) {
+      document.body.innerHTML = `<div class="text-center mt-40 text-red-400 text-3xl">Group not found or you don't have access.</div>`;
     } else {
-      renderAll();
-    }
-
-    function renderAll() {
-      // Header
-      document.getElementById('headerInfo').innerHTML = `
-        <div class="flex justify-between items-start">
-          <div>
-            <h1 class="text-5xl font-bold">${split.title}</h1>
-            <p class="text-6xl font-bold text-violet-400 mt-2">रू ${split.total}</p>
-          </div>
-          <div class="text-right">
-            <span class="text-sm bg-emerald-500/10 text-emerald-400 px-5 py-2 rounded-3xl">${split.members.filter(m=>m.accepted).length} members</span>
-          </div>
-        </div>
-      `;
-
-      // Expenses
-      const expList = document.getElementById('expensesList');
-      expList.innerHTML = split.expenses.map((e,i) => `
-        <div class="bg-zinc-900 p-6 rounded-3xl flex justify-between items-center">
-          <span>${e.name}</span>
-          <span class="font-medium">रू ${e.amount}</span>
-        </div>
-      `).join('') || '<p class="text-zinc-500">No expenses yet. Add some above!</p>';
-
-      // Members & live shares
-      const accepted = split.members.filter(m => m.accepted);
-      const share = Math.round(split.total / accepted.length);
-      document.getElementById('membersList').innerHTML = accepted.map(m => `
-        <div class="bg-zinc-900 p-8 rounded-3xl flex justify-between items-center">
-          <div class="flex items-center gap-4">
-            <i class="fas fa-user text-3xl text-violet-400"></i>
-            <div>
-              <div class="font-semibold">${m.user}</div>
-              <div class="text-xs text-emerald-400">✓ Accepted</div>
-            </div>
-          </div>
-          <div class="text-right">
-            <div class="text-3xl font-bold text-emerald-400">रू ${share}</div>
-            <div class="text-xs text-zinc-500">each</div>
-          </div>
-        </div>
-      `).join('');
-    }
-
-    function addExpense() {
-      const name = document.getElementById('itemName').value || "Item";
-      const amount = parseFloat(document.getElementById('itemAmount').value) || 0;
-      if (!amount) return;
-
-      split.expenses.push({name, amount});
-      split.total = split.expenses.reduce((sum, e) => sum + e.amount, 0);
-      localStorage.setItem('splits', JSON.stringify(splits));
-      renderAll();
+      if (!group.expenses) group.expenses = [];
+      if (!group.members) group.members = [{user: currentUser, accepted: true}];
+      if (!group.type) group.type = "one-time";
+      renderHeader();
+      switchTab(0);
     }
 
     function showToast(msg) {
       const toast = document.getElementById('toast');
       document.getElementById('toastMessage').textContent = msg;
       toast.classList.remove('hidden');
-      setTimeout(() => toast.classList.add('hidden'), 3000);
+      setTimeout(() => toast.classList.add('hidden'), 2800);
+    }
+
+    function renderHeader() {
+      document.getElementById('headerInfo').innerHTML = `
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+          <div>
+            <h1 class="text-5xl font-bold">${group.title}</h1>
+            <p class="text-6xl font-bold text-violet-400 mt-3">रू ${group.total}</p>
+          </div>
+          <div class="flex items-center gap-4 text-sm">
+            <div class="bg-emerald-500/10 text-emerald-400 px-6 py-3 rounded-3xl">${group.members.filter(m=>m.accepted).length} members</div>
+            <div class="bg-amber-500/10 text-amber-400 px-6 py-3 rounded-3xl">${group.type === "one-time" ? "One-time" : "Ongoing"}</div>
+          </div>
+        </div>
+      `;
+    }
+
+    function switchTab(tab) {
+      document.querySelectorAll('[id^="content"]').forEach(c => c.classList.add('hidden'));
+      document.getElementById('content' + tab).classList.remove('hidden');
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('border-b-2', 'border-violet-500'));
+      document.getElementById('tab' + tab).classList.add('border-b-2', 'border-violet-500');
+    }
+
+    function toggleSplitType(n) {
+      group.type = n === 0 ? "one-time" : "ongoing";
+      localStorage.setItem('groups', JSON.stringify(groups));
+      renderHeader();
+      showToast("Split type updated");
+    }
+
+    function addExpense() {
+      const name = document.getElementById('expenseName').value.trim() || "Untitled Expense";
+      const amount = parseFloat(document.getElementById('expenseAmount').value) || 0;
+      const date = document.getElementById('expenseDate').value || new Date().toISOString().split('T')[0];
+
+      if (!amount) return;
+
+      group.expenses.push({
+        id: Date.now(),
+        name,
+        amount,
+        date,
+        addedBy: currentUser,
+        approvedBy: [],
+        flaggedBy: [],
+        status: "pending"
+      });
+
+      group.total += amount;
+      localStorage.setItem('groups', JSON.stringify(groups));
+      renderExpenses();
+      renderHeader();
+      showToast("Expense added • Awaiting approval");
+    }
+
+    function renderExpenses() {
+      const container = document.getElementById('expensesList');
+      container.innerHTML = group.expenses.map(exp => {
+        const approved = exp.approvedBy || [];
+        const flagged = exp.flaggedBy || [];
+        const isApprovedByMe = approved.includes(currentUser);
+        const isFlaggedByMe = flagged.some(f => f.user === currentUser);
+
+        return `
+          <div class="bg-zinc-900 rounded-3xl p-8">
+            <div class="flex justify-between items-start">
+              <div>
+                <div class="text-sm text-zinc-400">${exp.date} • Added by ${exp.addedBy}</div>
+                <div class="text-2xl font-semibold mt-1">${exp.name}</div>
+                <div class="text-4xl font-bold text-violet-400">रू ${exp.amount}</div>
+              </div>
+              <div class="text-right">
+                ${exp.status === 'approved' ? `<span class="bg-emerald-500 px-5 py-1 rounded-3xl text-xs">Approved</span>` : 
+                  exp.status === 'flagged' ? `<span class="bg-red-500 px-5 py-1 rounded-3xl text-xs">Flagged</span>` : 
+                  `<span class="bg-amber-500 px-5 py-1 rounded-3xl text-xs">Pending</span>`}
+              </div>
+            </div>
+
+            <div class="flex gap-4 mt-8">
+              ${!isApprovedByMe ? `<button onclick="approveExpense(${exp.id})" class="flex-1 py-4 bg-emerald-600 rounded-3xl font-medium">Approve</button>` : ''}
+              ${!isFlaggedByMe ? `<button onclick="openFlagModal(${exp.id})" class="flex-1 py-4 bg-red-600 rounded-3xl font-medium">Flag & Remark</button>` : ''}
+            </div>
+
+            <!-- Approvals -->
+            ${approved.length ? `<div class="mt-6 text-xs text-emerald-400">Approved by: ${approved.join(', ')}</div>` : ''}
+
+            <!-- Remarks -->
+            ${flagged.length ? `<div class="mt-6 pt-6 border-t border-white/10">
+              <div class="text-xs uppercase tracking-widest text-red-400 mb-3">Remarks</div>
+              ${flagged.map(f => `<div class="bg-zinc-800 rounded-2xl p-4 text-xs mb-3"><strong>${f.user}:</strong> ${f.remark}</div>`).join('')}
+            </div>` : ''}
+          </div>
+        `;
+      }).join('') || `<p class="text-center text-zinc-500 py-20">No expenses yet. Add the first one above.</p>`;
+    }
+
+    function approveExpense(id) {
+      const exp = group.expenses.find(e => e.id === id);
+      if (!exp.approvedBy) exp.approvedBy = [];
+      if (!exp.approvedBy.includes(currentUser)) exp.approvedBy.push(currentUser);
+
+      if (exp.approvedBy.length === group.members.filter(m => m.accepted).length) {
+        exp.status = "approved";
+      }
+      localStorage.setItem('groups', JSON.stringify(groups));
+      renderExpenses();
+      showToast("Expense approved");
+    }
+
+    function openFlagModal(id) {
+      currentFlagId = id;
+      document.getElementById('flagModal').classList.remove('hidden');
+      document.getElementById('flagRemark').focus();
+    }
+
+    function closeFlagModal() {
+      document.getElementById('flagModal').classList.add('hidden');
+      currentFlagId = null;
+    }
+
+    function submitFlag() {
+      const remark = document.getElementById('flagRemark').value.trim();
+      if (!remark || !currentFlagId) return closeFlagModal();
+
+      const exp = group.expenses.find(e => e.id === currentFlagId);
+      if (!exp.flaggedBy) exp.flaggedBy = [];
+      exp.flaggedBy.push({user: currentUser, remark});
+      exp.status = "flagged";
+
+      localStorage.setItem('groups', JSON.stringify(groups));
+      closeFlagModal();
+      renderExpenses();
+      showToast("Expense flagged with remark");
+    }
+
+    function toggleUnevenMode() {
+      unevenMode = !unevenMode;
+      document.getElementById('unevenBtn').textContent = unevenMode ? "Back to Equal Split" : "Switch to Uneven Split";
+      renderMembers();
+    }
+
+    function renderMembers() {
+      const container = document.getElementById('membersList');
+      const acceptedMembers = group.members.filter(m => m.accepted);
+      const equalShare = Math.round(group.total / acceptedMembers.length);
+
+      container.innerHTML = acceptedMembers.map(m => {
+        let share = equalShare;
+        // Simple demo uneven support (you can extend with localStorage later)
+        return `
+          <div class="bg-zinc-900 rounded-3xl p-8">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-4">
+                <i class="fas fa-user text-4xl text-violet-400"></i>
+                <div>
+                  <div class="font-semibold text-xl">${m.user}</div>
+                  <div class="text-xs text-emerald-400">Accepted</div>
+                </div>
+              </div>
+              <div class="text-right">
+                <div class="text-4xl font-bold text-emerald-400">रू ${share}</div>
+                <div class="text-xs text-zinc-400">${unevenMode ? "Custom" : "Equal"}</div>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
     }
 
     function sendInvite() {
-      const user = document.getElementById('inviteUser').value.trim();
-      if (!user) return;
+      const username = document.getElementById('inviteUsername').value.trim();
+      if (!username) return showToast("Please enter a username");
 
-      if (!split.pendingInvites.includes(user)) {
-        split.pendingInvites.push(user);
+      let allInvites = JSON.parse(localStorage.getItem('allInvites') || '{}');
+      if (!allInvites[username]) allInvites[username] = [];
+      allInvites[username].push({
+        id: group.id,
+        title: group.title,
+        from: currentUser
+      });
+      localStorage.setItem('allInvites', JSON.stringify(allInvites));
 
-        // Save invite
-        let invites = JSON.parse(localStorage.getItem('allInvites') || '{}');
-        if (!invites[user]) invites[user] = [];
-        invites[user].push({id: split.id, title: split.title, from: localStorage.getItem('currentUser')});
-        localStorage.setItem('allInvites', JSON.stringify(invites));
-
-        localStorage.setItem('splits', JSON.stringify(splits));
-        showToast(`Invitation sent to ${user}!`);
-      }
+      showToast(`Invite sent to ${username}`);
+      document.getElementById('inviteUsername').value = '';
     }
+
+    // Initial render
+    function init() {
+      renderExpenses();
+      renderMembers();
+    }
+
+    // Keyboard support for modal
+    document.addEventListener('keydown', e => {
+      if (e.key === "Escape") closeFlagModal();
+    });
+
+    init();
   </script>
 </body>
 </html>

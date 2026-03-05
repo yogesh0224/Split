@@ -6,146 +6,171 @@
   <title>Invites • Splitly</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
-  <style>
-    .invite-card {
-      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-    .invite-card:hover {
-      transform: translateY(-4px);
-      box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
-    }
-  </style>
 </head>
-<body class="bg-zinc-950 text-white min-h-screen">
-  <!-- PREMIUM NAVBAR -->
-  <nav class="fixed top-0 w-full bg-zinc-950/90 backdrop-blur-2xl border-b border-white/10 z-50">
-    <div class="max-w-7xl mx-auto px-6 py-5 flex justify-between items-center">
-      <a href="index.html" class="flex items-center gap-3 group">
-        <i class="fas fa-handshake text-4xl text-violet-500 group-hover:scale-110 transition"></i>
-        <span class="text-3xl font-bold tracking-tighter">Splitly</span>
-      </a>
+<body class="bg-zinc-950 text-white">
+
+  <!-- NAVBAR -->
+<!-- REVISED PREMIUM NAVBAR (Copy this entire block into every page) -->
+<nav class="fixed top-0 w-full bg-zinc-950/95 backdrop-blur-2xl border-b border-white/10 z-50">
+  <div class="max-w-7xl mx-auto px-6 py-5 flex justify-between items-center">
+    
+    <!-- Logo -->
+    <a href="index.html" class="flex items-center gap-3">
+      <i class="fas fa-handshake text-4xl text-violet-500"></i>
+      <span class="text-3xl font-bold tracking-tighter">Splitly</span>
+    </a>
+
+    <!-- Desktop Menu -->
+    <div class="hidden md:flex gap-10 text-sm font-medium">
+      <a href="index.html" class="hover:text-violet-400 transition">Home</a>
+      <a href="dashboard.html" class="hover:text-violet-400 transition">Dashboard</a>
+      <a href="invites.html" class="hover:text-violet-400 transition">Invites</a>
+      <a href="notifications.html" class="hover:text-violet-400 transition">Notifications</a>
+    </div>
+
+    <!-- Right side (desktop) -->
+    <div class="hidden md:flex items-center gap-6">
+      <span id="currentUserDisplay" class="text-sm font-medium"></span>
+      <button onclick="logout()" class="text-xs bg-white/10 px-5 py-2 rounded-2xl hover:bg-white/20 transition">Logout</button>
+    </div>
+
+    <!-- Mobile Hamburger -->
+    <button onclick="toggleMobileMenu()" class="md:hidden text-3xl">
+      <i class="fas fa-bars"></i>
+    </button>
+  </div>
+
+  <!-- MOBILE SLIDING MENU -->
+  <div id="mobileMenu" class="hidden fixed inset-0 bg-black/70 z-[60] flex justify-end">
+    <div onclick="event.stopImmediatePropagation()" 
+         class="bg-zinc-900 w-80 h-full shadow-2xl transform translate-x-full transition-transform duration-300 flex flex-col">
       
-      <div class="hidden md:flex gap-10 text-sm font-medium">
-        <a href="index.html" class="hover:text-violet-400 transition">Home</a>
-        <a href="dashboard.html" class="hover:text-violet-400 transition">Dashboard</a>
-        <a href="invites.html" class="text-violet-400 font-semibold">Invites</a>
+      <!-- Mobile Menu Header -->
+      <div class="p-6 border-b border-white/10 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <i class="fas fa-handshake text-3xl text-violet-500"></i>
+          <span class="text-2xl font-bold">Splitly</span>
+        </div>
+        <button onclick="toggleMobileMenu()" class="text-3xl text-zinc-400 hover:text-white">
+          <i class="fas fa-times"></i>
+        </button>
       </div>
 
-      <div class="flex items-center gap-6">
-        <span id="currentUserDisplay" class="text-sm font-medium hidden md:block"></span>
+      <!-- Menu Links -->
+      <div class="flex-1 p-6 space-y-6 text-lg">
+        <a href="index.html" onclick="toggleMobileMenu()" class="flex items-center gap-4 hover:text-violet-400 transition">
+          <i class="fas fa-home w-6"></i> Home
+        </a>
+        <a href="dashboard.html" onclick="toggleMobileMenu()" class="flex items-center gap-4 hover:text-violet-400 transition">
+          <i class="fas fa-chart-line w-6"></i> Dashboard
+        </a>
+        <a href="invites.html" onclick="toggleMobileMenu()" class="flex items-center gap-4 hover:text-violet-400 transition">
+          <i class="fas fa-envelope w-6"></i> Invites
+        </a>
+        <a href="notifications.html" onclick="toggleMobileMenu()" class="flex items-center gap-4 hover:text-violet-400 transition">
+          <i class="fas fa-bell w-6"></i> Notifications
+        </a>
+      </div>
+
+      <!-- User & Logout -->
+      <div class="p-6 border-t border-white/10">
+        <div class="flex items-center gap-3 mb-6">
+          <i class="fas fa-user-circle text-4xl text-violet-400"></i>
+          <div>
+            <p id="mobileUserName" class="font-medium"></p>
+            <p class="text-xs text-zinc-400">Logged in</p>
+          </div>
+        </div>
         <button onclick="logout()" 
-                class="text-xs bg-white/10 px-5 py-2 rounded-2xl hover:bg-white/20 transition">Logout</button>
+                class="w-full py-4 bg-red-600/80 hover:bg-red-600 rounded-3xl font-medium transition">
+          Logout
+        </button>
       </div>
     </div>
-  </nav>
+  </div>
+</nav>
 
   <!-- TOAST -->
   <div id="toast" class="hidden fixed bottom-6 right-6 bg-emerald-600 text-white px-6 py-4 rounded-3xl shadow-2xl flex items-center gap-3 z-50">
-    <i class="fas fa-check-circle text-xl"></i>
+    <i class="fas fa-check-circle"></i>
     <span id="toastMessage" class="font-medium"></span>
   </div>
 
-  <div class="max-w-4xl mx-auto px-6 pt-28 pb-12">
-    <div class="flex justify-between items-center mb-12">
-      <h1 class="text-5xl font-bold tracking-tight">Pending Invitations</h1>
-      <a href="dashboard.html" 
-         class="text-sm text-violet-400 hover:text-violet-300 flex items-center gap-2">
-        ← Back to Dashboard
-      </a>
-    </div>
-
+  <div class="max-w-4xl mx-auto px-6 pt-28">
+    <h1 class="text-5xl font-bold mb-10">Pending Invitations</h1>
     <div id="invitesContainer" class="space-y-6"></div>
-
-    <!-- Empty state -->
-    <div id="emptyState" class="hidden text-center py-24">
-      <i class="fas fa-inbox text-6xl text-zinc-700 mb-6"></i>
-      <h3 class="text-2xl font-semibold text-zinc-400 mb-2">No pending invites</h3>
-      <p class="text-zinc-500">When someone invites you, they'll appear here.</p>
-    </div>
   </div>
 
   <script>
-    // Get current user
-    const currentUser = localStorage.getItem('currentUser') || "yogesh";
+    const currentUser = localStorage.getItem('currentUser');
     document.getElementById('currentUserDisplay').textContent = currentUser;
     document.getElementById('currentUserDisplay').classList.remove('hidden');
 
-    // Toast function
     function showToast(msg) {
       const toast = document.getElementById('toast');
       document.getElementById('toastMessage').textContent = msg;
       toast.classList.remove('hidden');
-      toast.style.opacity = '1';
-      setTimeout(() => {
-        toast.style.opacity = '0';
-        setTimeout(() => toast.classList.add('hidden'), 300);
-      }, 3000);
+      setTimeout(() => toast.classList.add('hidden'), 3000);
     }
 
-    // Load and render invites
     function loadInvites() {
+      let allInvites = JSON.parse(localStorage.getItem('allInvites') || '{}');
+      let myInvites = allInvites[currentUser] || [];
       const container = document.getElementById('invitesContainer');
-      const emptyState = document.getElementById('emptyState');
+
       container.innerHTML = '';
 
-      let allInvites = JSON.parse(localStorage.getItem('allInvites') || '{}');
-      const myInvites = allInvites[currentUser] || [];
-
       if (myInvites.length === 0) {
-        emptyState.classList.remove('hidden');
+        container.innerHTML = `
+          <div class="bg-zinc-900 rounded-3xl p-16 text-center">
+            <i class="fas fa-inbox text-7xl text-zinc-600 mb-6"></i>
+            <p class="text-2xl text-zinc-400">No pending invitations</p>
+          </div>`;
         return;
       }
 
-      emptyState.classList.add('hidden');
-
       myInvites.forEach((invite, index) => {
         const card = document.createElement('div');
-        card.className = "invite-card bg-zinc-900 rounded-3xl p-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-6";
+        card.className = "bg-zinc-900 rounded-3xl p-8 flex justify-between items-center";
         card.innerHTML = `
-          <div class="flex-1">
-            <div class="text-2xl font-semibold mb-1">${invite.title}</div>
-            <div class="text-zinc-400 text-sm">Invited by <span class="font-medium text-white">${invite.from}</span></div>
+          <div>
+            <h3 class="text-2xl font-semibold">${invite.title}</h3>
+            <p class="text-zinc-400">Invited by <span class="text-violet-400">${invite.from}</span></p>
           </div>
-          <button onclick="acceptInvite(${index})" 
-                  class="bg-emerald-600 hover:bg-emerald-500 px-10 py-4 rounded-3xl font-semibold text-sm transition flex-shrink-0">
-            Accept Invite
-          </button>
+          <button onclick="acceptInvite(${index})" class="bg-emerald-600 hover:bg-emerald-500 px-10 py-4 rounded-3xl font-semibold">Accept</button>
         `;
         container.appendChild(card);
       });
     }
 
-    // Accept invite
     function acceptInvite(index) {
       let allInvites = JSON.parse(localStorage.getItem('allInvites') || '{}');
-      const myInvites = allInvites[currentUser] || [];
+      let myInvites = allInvites[currentUser] || [];
       const invite = myInvites[index];
 
-      if (!invite) return;
+      let groups = JSON.parse(localStorage.getItem('groups') || '[]');
+      const group = groups.find(g => g.id === invite.id);
+      if (group) {
+        group.members.push({ user: currentUser, accepted: true });
+        localStorage.setItem('groups', JSON.stringify(groups));
+      }
 
-      // Add to split
-      let splits = JSON.parse(localStorage.getItem('splits') || '[]');
-      const theSplit = splits.find(s => s.id === invite.id);
-      
-      if (theSplit) {
-        // Add as accepted member
-        if (!theSplit.members.some(m => m.user === currentUser)) {
-          theSplit.members.push({ user: currentUser, accepted: true });
-        }
-        
-        localStorage.setItem('splits', JSON.stringify(splits));
-        
-        // Remove the invite
-        allInvites[currentUser].splice(index, 1);
-        if (allInvites[currentUser].length === 0) delete allInvites[currentUser];
-        localStorage.setItem('allInvites', JSON.stringify(allInvites));
-        
-        showToast(`✅ Invite accepted! You're now part of "${invite.title}"`);
-        
-        // Refresh the page
-        setTimeout(() => {
-          window.location.href = `split-detail.html?id=${invite.id}`;
-        }, 1200);
+      allInvites[currentUser].splice(index, 1);
+      localStorage.setItem('allInvites', JSON.stringify(allInvites));
+
+      showToast("✅ Invite accepted! You can now see the group.");
+      setTimeout(() => window.location.href = `split-detail.html?id=${invite.id}`, 1400);
+    }
+
+    function toggleMobileMenu() {
+      const menu = document.getElementById('mobileMenu');
+      const drawer = menu.querySelector('div');
+      if (menu.classList.contains('hidden')) {
+        menu.classList.remove('hidden');
+        setTimeout(() => drawer.style.transform = 'translateX(0)', 10);
+      } else {
+        drawer.style.transform = 'translateX(100%)';
+        setTimeout(() => menu.classList.add('hidden'), 300);
       }
     }
 
@@ -154,8 +179,12 @@
       window.location.href = "index.html";
     }
 
-    // Load on page ready
-    window.onload = loadInvites;
+    const currentUser = localStorage.getItem('currentUser');
+    document.getElementById('currentUserDisplay').textContent = currentUser;
+
+    loadInvites();
+
+    
   </script>
 </body>
 </html>
