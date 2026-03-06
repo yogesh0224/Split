@@ -45,15 +45,13 @@
   </div>
 
   <script>
-    function showToast(msg) {
+    function showToast(msg, isError = false) {
       const toast = document.getElementById('toast');
       document.getElementById('toastMessage').textContent = msg;
       toast.classList.remove('hidden');
-      toast.style.transform = 'translateY(0)';
-      setTimeout(() => {
-        toast.style.transform = 'translateY(80px)';
-        setTimeout(() => toast.classList.add('hidden'), 300);
-      }, 3000);
+      toast.classList.toggle('bg-emerald-600', !isError);
+      toast.classList.toggle('bg-red-600', isError);
+      setTimeout(() => toast.classList.add('hidden'), 3000);
     }
 
     function handleSignup() {
@@ -61,29 +59,34 @@
       const email = document.getElementById('email').value.trim();
       const password = document.getElementById('password').value;
       if (!username || !password) {
-        showToast("Username and password are required");
+        showToast("Username and password are required", true);
         return;
       }
       let users = JSON.parse(localStorage.getItem('users') || '[]');
       if (users.find(u => u.username === username)) {
-        showToast("Username already exists");
+        showToast("Username already exists", true);
         return;
       }
       users.push({username, email, password});
       localStorage.setItem('users', JSON.stringify(users));
       localStorage.setItem('currentUser', username);
-      localStorage.setItem('currentEmail', email);
+      // New: Notification permission
+      if ('Notification' in window) {
+        Notification.requestPermission();
+      }
       showToast("Account created successfully! Welcome to Splitly 🎉");
       setTimeout(() => window.location.href = "dashboard.html", 1500);
     }
 
     function googleSignup() {
-      // For demo, same as before
+      // Demo
       localStorage.setItem('currentUser', "google_user");
-      localStorage.setItem('currentEmail', "you@gmail.com");
+      if ('Notification' in window) {
+        Notification.requestPermission();
+      }
       showToast("Signed in with Google successfully!");
       setTimeout(() => window.location.href = "dashboard.html", 1500);
     }
-</script>
+  </script>
 </body>
 </html>

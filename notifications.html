@@ -9,7 +9,7 @@
 </head>
 <body class="bg-zinc-950 text-white">
 
-  <!-- NEW PREMIUM NAVBAR -->
+  <!-- NAVBAR -->
   <nav class="fixed top-0 w-full bg-zinc-950/95 backdrop-blur-2xl border-b border-white/10 z-50">
     <div class="max-w-7xl mx-auto px-6 py-5 flex justify-between items-center">
       <a href="index.html" class="flex items-center gap-3">
@@ -42,23 +42,12 @@
     </div>
   </nav>
 
+  <div class="max-w-4xl mx-auto px-6 pt-28">
+    <h1 class="text-5xl font-bold mb-10">Notifications</h1>
+    <div id="notifList" class="space-y-6"></div>
+  </div>
+
   <script>
-    // Simple demo notifications (you can expand later with real events)
-    const notifs = [
-      { type: "invite", message: "Ram invited you to 'Thamel Flatmates'", time: "2m ago" },
-      { type: "expense", message: "Sita added 'Electricity bill' – awaiting your approval", time: "1h ago" }
-    ];
-
-    document.getElementById('notifList').innerHTML = notifs.map(n => `
-      <div class="bg-zinc-900 rounded-3xl p-8 flex justify-between">
-        <div>
-          <p class="font-medium">${n.message}</p>
-          <p class="text-xs text-zinc-400">${n.time}</p>
-        </div>
-        <button onclick="this.parentElement.remove()" class="text-xs bg-white/10 px-6 py-3 rounded-3xl">Mark read</button>
-      </div>
-    `).join('');
-
     function toggleMobileMenu() {
       const menu = document.getElementById('mobileMenu');
       const drawer = menu.querySelector('div');
@@ -70,6 +59,75 @@
         setTimeout(() => menu.classList.add('hidden'), 300);
       }
     }
+
+    function logout() {
+      localStorage.removeItem('currentUser');
+      window.location.href = "index.html";
+    }
+
+    function loadNotifications() {
+      const currentUser = localStorage.getItem('currentUser');
+      let groups = JSON.parse(localStorage.getItem('groups') || '[]');
+      let allInvites = JSON.parse(localStorage.getItem('allInvites') || '{}');
+      const container = document.getElementById('notifList');
+      container.innerHTML = '';
+
+      let notifs = [];
+
+      // Pending invites
+      const myInvites = allInvites[currentUser] || [];
+      myInvites.forEach(invite => {
+        notifs.push({
+          type: 'invite',
+          message: `<strong>${invite.from}</strong> invited you to <span class="text-violet-400">"${invite.title}"</span>`,
+          time: 'Just now',
+          action: `<button onclick="window.location.href='invites.html'" class="text-xs bg-violet-600 px-6 py-3 rounded-3xl">View Invites</button>`
+        });
+      });
+
+      // Expenses needing approval
+      groups.forEach(group => {
+        const isMember = group.members.some(m => m.user === currentUser && m.accepted);
+        if (!isMember) return;
+
+        group.expenses.forEach(exp => {
+          if (exp.status === 'pending' && !exp.approvedBy?.includes(currentUser) && exp.addedBy !== currentUser) {
+            notifs.push({
+              type: 'expense',
+              message: `<strong>${exp.addedBy}</strong> added <span class="text-emerald-400">"${exp.name}"</span> (रू ${exp.amount}) in <span class="text-violet-400">"${group.title}"</span>`,
+              time: exp.date,
+              action: `<button onclick="window.location.href='split-detail.html?id=${group.id}'" class="text-xs bg-emerald-600 px-6 py-3 rounded-3xl">Approve</button>`
+            });
+          }
+        });
+      });
+
+      if (notifs.length === 0) {
+        container.innerHTML = `
+          <div class="bg-zinc-900 rounded-3xl p-16 text-center">
+            <i class="fas fa-bell-slash text-7xl text-zinc-600 mb-6"></i>
+            <p class="text-2xl text-zinc-400">All caught up!</p>
+          </div>`;
+        return;
+      }
+
+      container.innerHTML = notifs.map(n => `
+        <div class="bg-zinc-900 rounded-3xl p-8 flex justify-between items-center">
+          <div>
+            <p class="font-medium">${n.message}</p>
+            <p class="text-xs text-zinc-400 mt-1">${n.time}</p>
+          </div>
+          ${n.action}
+        </div>
+      `).join('');
+
+      // New: Push notification
+      if (notifs.length > 0 && 'Notification' in window && Notification.permission === 'granted') {
+        new Notification('Splitly: New Notifications', {body: `${notifs.length} unread notifications`});
+      }
+    }
+
+    loadNotifications();
   </script>
 </body>
 </html>

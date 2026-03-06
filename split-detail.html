@@ -6,11 +6,13 @@
   <title>Split Detail • Splitly</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+  <!-- PDF Export Library -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 </head>
 <body class="bg-zinc-950 text-white">
 
   <!-- NAVBAR -->
-<nav class="fixed top-0 w-full bg-zinc-950/95 backdrop-blur-2xl border-b border-white/10 z-50">
+  <nav class="fixed top-0 w-full bg-zinc-950/95 backdrop-blur-2xl border-b border-white/10 z-50">
     <div class="max-w-7xl mx-auto px-6 py-5 flex justify-between items-center">
       <a href="index.html" class="flex items-center gap-3">
         <i class="fas fa-handshake text-4xl text-violet-500"></i>
@@ -48,7 +50,7 @@
     <span id="toastMessage" class="font-medium"></span>
   </div>
 
-  <!-- FLAG MODAL (no prompt!) -->
+  <!-- FLAG MODAL -->
   <div id="flagModal" class="hidden fixed inset-0 bg-black/70 flex items-center justify-center z-50">
     <div class="bg-zinc-900 rounded-3xl p-8 max-w-md w-full mx-4">
       <h3 class="text-xl font-semibold mb-4">Flag Expense</h3>
@@ -62,7 +64,7 @@
 
   <div class="max-w-6xl mx-auto px-6 pt-28 pb-20">
     <!-- HEADER -->
-    <div id="headerInfo" class="mb-12"></div>
+    <div id="headerInfo" class="mb-12 flex justify-between items-start"></div>
 
     <!-- Split Type Toggle -->
     <div class="flex justify-center mb-10 bg-zinc-900 rounded-3xl p-1 w-fit mx-auto">
@@ -71,11 +73,13 @@
     </div>
 
     <!-- TABS -->
-    <div class="flex border-b border-white/10 mb-10">
+    <div class="flex border-b border-white/10 mb-10 overflow-x-auto">
       <button onclick="switchTab(0)" id="tab0" class="tab-btn active px-8 py-4 font-semibold border-b-2 border-violet-500">Expenses</button>
       <button onclick="switchTab(1)" id="tab1" class="tab-btn px-8 py-4 font-semibold">Summary</button>
       <button onclick="switchTab(2)" id="tab2" class="tab-btn px-8 py-4 font-semibold">Members & Shares</button>
-      <button onclick="switchTab(3)" id="tab3" class="tab-btn px-8 py-4 font-semibold">Invite</button>
+      <button onclick="switchTab(3)" id="tab3" class="tab-btn px-8 py-4 font-semibold">Settlements</button>
+      <button onclick="switchTab(4)" id="tab4" class="tab-btn px-8 py-4 font-semibold">Timeline</button>
+      <button onclick="switchTab(5)" id="tab5" class="tab-btn px-8 py-4 font-semibold">Invite</button>
     </div>
 
     <!-- TAB CONTENTS -->
@@ -85,10 +89,15 @@
       <!-- Add Expense Form -->
       <div class="bg-zinc-900 rounded-3xl p-8 mb-12">
         <h3 class="font-semibold text-xl mb-6 flex items-center gap-3"><i class="fas fa-plus"></i> Add New Expense</h3>
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <div class="grid grid-cols-1 md:grid-cols-5 gap-6">
           <input id="expenseName" placeholder="Expense description" class="bg-zinc-800 border border-white/10 rounded-2xl px-6 py-4 text-lg">
           <input id="expenseAmount" type="number" placeholder="Amount (रू)" class="bg-zinc-800 border border-white/10 rounded-2xl px-6 py-4 text-lg">
           <input id="expenseDate" type="date" class="bg-zinc-800 border border-white/10 rounded-2xl px-6 py-4 text-lg">
+          <select id="recurringFreq" class="bg-zinc-800 border border-white/10 rounded-2xl px-6 py-4 text-lg">
+            <option value="">One-time</option>
+            <option value="weekly">Weekly</option>
+            <option value="monthly">Monthly</option>
+          </select>
           <button onclick="addExpense()" class="bg-emerald-600 hover:bg-emerald-500 rounded-3xl font-semibold text-lg">Add Expense</button>
         </div>
       </div>
@@ -100,268 +109,465 @@
     <!-- SUMMARY TAB -->
     <div id="content1" class="hidden">
       <div class="bg-zinc-900 rounded-3xl p-12 text-center">
-        <h3 class="text-3xl font-bold mb-4">Monthly / Total Overview</h3>
-        <div id="summaryBox" class="text-7xl font-bold text-violet-400">रू 0</div>
-        <p id="fairShareText" class="text-xl text-zinc-400 mt-4"></p>
+        <h3 class="text-3xl font-bold mb-4">Total Spent</h3>
+        <p id="summaryBox" class="text-6xl font-bold text-violet-400 mb-6">रू 0</p>
+        <p id="fairShareText" class="text-xl text-zinc-300">Your fair share: रू 0</p>
       </div>
     </div>
 
-    <!-- MEMBERS & SHARES TAB (with Uneven Split support) -->
+    <!-- MEMBERS & SHARES TAB -->
     <div id="content2" class="hidden">
-      <div class="flex justify-between items-center mb-8">
-        <h3 class="font-semibold text-2xl">Members & Shares</h3>
-        <button onclick="toggleUnevenMode()" id="unevenBtn" class="px-6 py-3 rounded-3xl bg-white/10 text-sm font-medium">Switch to Uneven Split</button>
+      <div class="bg-zinc-900 rounded-3xl p-12">
+        <div class="flex justify-between items-center mb-8">
+          <h3 class="text-3xl font-bold">Members & Shares</h3>
+          <button id="unevenBtn" onclick="toggleUnevenMode()" class="bg-violet-600 px-6 py-3 rounded-3xl">Switch to Uneven Split</button>
+        </div>
+        <div id="membersList" class="space-y-6"></div>
       </div>
-      <div id="membersList" class="grid md:grid-cols-2 gap-6"></div>
+    </div>
+
+    <!-- SETTLEMENTS TAB -->
+    <div id="content3" class="hidden">
+      <div class="bg-zinc-900 rounded-3xl p-12">
+        <h3 class="text-3xl font-bold mb-8">Settlements</h3>
+        <div id="balancesOverview" class="space-y-6 mb-8"></div>
+        <h4 class="text-xl font-semibold mb-4">Log Payment</h4>
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+          <select id="payFrom" class="bg-zinc-800 border border-white/10 rounded-2xl px-6 py-4"></select>
+          <select id="payTo" class="bg-zinc-800 border border-white/10 rounded-2xl px-6 py-4"></select>
+          <input id="payAmount" type="number" placeholder="Amount (रू)" class="bg-zinc-800 border border-white/10 rounded-2xl px-6 py-4">
+          <button onclick="logPayment()" class="bg-emerald-600 hover:bg-emerald-500 rounded-3xl font-semibold">Settle Up</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- TIMELINE TAB -->
+    <div id="content4" class="hidden">
+      <div class="bg-zinc-900 rounded-3xl p-12">
+        <h3 class="text-3xl font-bold mb-8">Activity Timeline</h3>
+        <div class="flex gap-4 mb-6">
+          <input id="timelineSearch" placeholder="Search timeline..." class="flex-1 bg-zinc-800 border border-white/10 rounded-2xl px-6 py-4">
+          <select id="timelineFilter" class="bg-zinc-800 border border-white/10 rounded-2xl px-6 py-4">
+            <option value="">All</option>
+            <option value="member">By Member</option>
+            <option value="type">By Type</option>
+          </select>
+        </div>
+        <div id="timelineList" class="space-y-4"></div>
+      </div>
     </div>
 
     <!-- INVITE TAB -->
-    <div id="content3" class="hidden">
+    <div id="content5" class="hidden">
       <div class="bg-zinc-900 rounded-3xl p-8">
-        <h3 class="font-semibold text-xl mb-6">Invite Members by Username</h3>
+        <h3 class="font-semibold text-xl mb-6 flex items-center gap-3"><i class="fas fa-envelope"></i> Invite Member</h3>
         <div class="flex gap-4">
-          <input id="inviteUsername" placeholder="e.g. ram" class="flex-1 bg-zinc-800 border border-white/10 rounded-2xl px-6 py-4">
-          <button onclick="sendInvite()" class="bg-violet-600 px-12 rounded-3xl font-medium">Send Invite</button>
+          <input id="inviteUsername" placeholder="Username" class="flex-1 bg-zinc-800 border border-white/10 rounded-2xl px-6 py-4 text-lg">
+          <button onclick="sendInvite()" class="bg-violet-600 hover:bg-violet-500 px-8 py-4 rounded-3xl font-semibold">Send Invite</button>
         </div>
-        <p class="text-xs text-zinc-400 mt-4">They must accept before they can see expenses or add new ones.</p>
       </div>
     </div>
   </div>
 
   <script>
-    const groupId = parseInt(new URLSearchParams(location.search).get('id'));
+    const urlParams = new URLSearchParams(window.location.search);
+    const groupId = parseInt(urlParams.get('id'));
+    const currentUser = localStorage.getItem('currentUser');
     let groups = JSON.parse(localStorage.getItem('groups') || '[]');
     let group = groups.find(g => g.id === groupId);
-    let currentUser = localStorage.getItem('currentUser');
     let unevenMode = false;
-    let currentFlagId = null;
 
-    if (!group) {
-      document.body.innerHTML = `<div class="text-center mt-40 text-red-400 text-3xl">Group not found or you don't have access.</div>`;
-    } else {
-      if (!group.expenses) group.expenses = [];
-      if (!group.members) group.members = [{user: currentUser, accepted: true}];
-      if (!group.type) group.type = "one-time";
-      renderHeader();
-      switchTab(0);
+    if (!group || !group.members.some(m => m.user === currentUser && m.accepted)) {
+      alert('Group not found or access denied');
+      window.location.href = 'dashboard.html';
     }
 
-    function toggleMobileMenu() {
-      const menu = document.getElementById('mobileMenu');
-      const drawer = menu.querySelector('div');
-      if (menu.classList.contains('hidden')) {
-        menu.classList.remove('hidden');
-        setTimeout(() => drawer.style.transform = 'translateX(0)', 10);
-      } else {
-        drawer.style.transform = 'translateX(100%)';
-        setTimeout(() => menu.classList.add('hidden'), 300);
-      }
-    }
-    
-    function showToast(msg) {
+    function showToast(msg, isError = false) {
       const toast = document.getElementById('toast');
       document.getElementById('toastMessage').textContent = msg;
       toast.classList.remove('hidden');
-      setTimeout(() => toast.classList.add('hidden'), 2800);
+      toast.classList.toggle('bg-emerald-600', !isError);
+      toast.classList.toggle('bg-red-600', isError);
+      setTimeout(() => toast.classList.add('hidden'), 3000);
     }
 
-    function renderHeader() {
-      document.getElementById('headerInfo').innerHTML = `
-        <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
-          <div>
-            <h1 class="text-5xl font-bold">${group.title}</h1>
-            <p class="text-6xl font-bold text-violet-400 mt-3">रू ${group.total}</p>
-          </div>
-          <div class="flex items-center gap-4 text-sm">
-            <div class="bg-emerald-500/10 text-emerald-400 px-6 py-3 rounded-3xl">${group.members.filter(m=>m.accepted).length} members</div>
-            <div class="bg-amber-500/10 text-amber-400 px-6 py-3 rounded-3xl">${group.type === "one-time" ? "One-time" : "Ongoing"}</div>
-          </div>
-        </div>
-      `;
+    function toggleMobileMenu() {
+      // Existing
     }
 
-    function switchTab(tab) {
+    function logout() {
+      localStorage.removeItem('currentUser');
+      window.location.href = "index.html";
+    }
+
+    function toggleSplitType(index) {
+      // Placeholder for type toggle
+    }
+
+    function switchTab(index) {
       document.querySelectorAll('[id^="content"]').forEach(c => c.classList.add('hidden'));
-      document.getElementById('content' + tab).classList.remove('hidden');
-      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('border-b-2', 'border-violet-500'));
-      document.getElementById('tab' + tab).classList.add('border-b-2', 'border-violet-500');
-    }
-
-    function toggleSplitType(n) {
-      group.type = n === 0 ? "one-time" : "ongoing";
-      localStorage.setItem('groups', JSON.stringify(groups));
-      renderHeader();
-      showToast("Split type updated");
+      document.getElementById(`content${index}`).classList.remove('hidden');
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active', 'border-violet-500', 'border-b-2'));
+      document.getElementById(`tab${index}`).classList.add('active', 'border-violet-500', 'border-b-2');
+      if (index === 4) renderTimeline();
     }
 
     function addExpense() {
-      const name = document.getElementById('expenseName').value.trim() || "Untitled Expense";
+      const name = document.getElementById('expenseName').value.trim();
       const amount = parseFloat(document.getElementById('expenseAmount').value) || 0;
       const date = document.getElementById('expenseDate').value || new Date().toISOString().split('T')[0];
+      const freq = document.getElementById('recurringFreq').value;
 
-      if (!amount) return;
+      if (!name || amount <= 0) return showToast('Invalid expense', true);
 
-      group.expenses.push({
-        id: Date.now(),
-        name,
-        amount,
-        date,
-        addedBy: currentUser,
-        approvedBy: [],
-        flaggedBy: [],
-        status: "pending"
-      });
+      const expense = {id: Date.now(), name, amount, date, addedBy: currentUser, status: 'pending', approvedBy: [], flaggedBy: [], flagRemark: ''};
 
-      group.total += amount;
-      localStorage.setItem('groups', JSON.stringify(groups));
-      renderExpenses();
-      renderHeader();
-      showToast("Expense added • Awaiting approval");
-    }
-
-    function renderExpenses() {
-      const container = document.getElementById('expensesList');
-      container.innerHTML = group.expenses.map(exp => {
-        const approved = exp.approvedBy || [];
-        const flagged = exp.flaggedBy || [];
-        const isApprovedByMe = approved.includes(currentUser);
-        const isFlaggedByMe = flagged.some(f => f.user === currentUser);
-
-        return `
-          <div class="bg-zinc-900 rounded-3xl p-8">
-            <div class="flex justify-between items-start">
-              <div>
-                <div class="text-sm text-zinc-400">${exp.date} • Added by ${exp.addedBy}</div>
-                <div class="text-2xl font-semibold mt-1">${exp.name}</div>
-                <div class="text-4xl font-bold text-violet-400">रू ${exp.amount}</div>
-              </div>
-              <div class="text-right">
-                ${exp.status === 'approved' ? `<span class="bg-emerald-500 px-5 py-1 rounded-3xl text-xs">Approved</span>` : 
-                  exp.status === 'flagged' ? `<span class="bg-red-500 px-5 py-1 rounded-3xl text-xs">Flagged</span>` : 
-                  `<span class="bg-amber-500 px-5 py-1 rounded-3xl text-xs">Pending</span>`}
-              </div>
-            </div>
-
-            <div class="flex gap-4 mt-8">
-              ${!isApprovedByMe ? `<button onclick="approveExpense(${exp.id})" class="flex-1 py-4 bg-emerald-600 rounded-3xl font-medium">Approve</button>` : ''}
-              ${!isFlaggedByMe ? `<button onclick="openFlagModal(${exp.id})" class="flex-1 py-4 bg-red-600 rounded-3xl font-medium">Flag & Remark</button>` : ''}
-            </div>
-
-            <!-- Approvals -->
-            ${approved.length ? `<div class="mt-6 text-xs text-emerald-400">Approved by: ${approved.join(', ')}</div>` : ''}
-
-            <!-- Remarks -->
-            ${flagged.length ? `<div class="mt-6 pt-6 border-t border-white/10">
-              <div class="text-xs uppercase tracking-widest text-red-400 mb-3">Remarks</div>
-              ${flagged.map(f => `<div class="bg-zinc-800 rounded-2xl p-4 text-xs mb-3"><strong>${f.user}:</strong> ${f.remark}</div>`).join('')}
-            </div>` : ''}
-          </div>
-        `;
-      }).join('') || `<p class="text-center text-zinc-500 py-20">No expenses yet. Add the first one above.</p>`;
-    }
-
-    function approveExpense(id) {
-      const exp = group.expenses.find(e => e.id === id);
-      if (!exp.approvedBy) exp.approvedBy = [];
-      if (!exp.approvedBy.includes(currentUser)) exp.approvedBy.push(currentUser);
-
-      if (exp.approvedBy.length === group.members.filter(m => m.accepted).length) {
-        exp.status = "approved";
+      if (freq) {
+        if (!group.recurrings) group.recurrings = [];
+        group.recurrings.push({name, amount, freq, nextDate: date});
+      } else {
+        group.expenses.push(expense);
+        group.total += amount;
       }
+
+      logTimeline(`Expense "${name}" added by ${currentUser}`);
       localStorage.setItem('groups', JSON.stringify(groups));
       renderExpenses();
-      showToast("Expense approved");
+      renderSummary();
+      renderHeader();
+      renderBalances();
+
+      // Notification
+      if ('Notification' in window && Notification.permission === 'granted') {
+        new Notification('Splitly: New Expense', {body: `${name} (रू ${amount}) added to ${group.title}`});
+      }
+
+      document.getElementById('expenseName').value = '';
+      document.getElementById('expenseAmount').value = '';
+      document.getElementById('expenseDate').value = '';
+      document.getElementById('recurringFreq').value = '';
+      showToast('Expense added');
     }
 
-    function openFlagModal(id) {
-      currentFlagId = id;
+    function approveExpense(expId) {
+      const exp = group.expenses.find(e => e.id === expId);
+      if (!exp.approvedBy.includes(currentUser)) {
+        exp.approvedBy.push(currentUser);
+        if (exp.approvedBy.length === group.members.filter(m => m.accepted).length - 1) { // All except adder
+          exp.status = 'approved';
+        }
+        logTimeline(`Expense "${exp.name}" approved by ${currentUser}`);
+        localStorage.setItem('groups', JSON.stringify(groups));
+        renderExpenses();
+        renderBalances();
+        showToast('Approved');
+      }
+    }
+
+    function openFlagModal(expId) {
       document.getElementById('flagModal').classList.remove('hidden');
-      document.getElementById('flagRemark').focus();
+      document.getElementById('flagModal').dataset.expId = expId;
     }
 
     function closeFlagModal() {
       document.getElementById('flagModal').classList.add('hidden');
-      currentFlagId = null;
+      document.getElementById('flagRemark').value = '';
     }
 
     function submitFlag() {
+      const expId = parseInt(document.getElementById('flagModal').dataset.expId);
       const remark = document.getElementById('flagRemark').value.trim();
-      if (!remark || !currentFlagId) return closeFlagModal();
+      if (!remark) return showToast('Remark required', true);
 
-      const exp = group.expenses.find(e => e.id === currentFlagId);
-      if (!exp.flaggedBy) exp.flaggedBy = [];
-      exp.flaggedBy.push({user: currentUser, remark});
-      exp.status = "flagged";
-
+      const exp = group.expenses.find(e => e.id === expId);
+      exp.flaggedBy.push(currentUser);
+      exp.flagRemark = remark;
+      exp.status = 'flagged';
+      logTimeline(`Expense "${exp.name}" flagged by ${currentUser}: ${remark}`);
       localStorage.setItem('groups', JSON.stringify(groups));
       closeFlagModal();
       renderExpenses();
-      showToast("Expense flagged with remark");
+      showToast('Flagged');
     }
 
-    function toggleUnevenMode() {
-      unevenMode = !unevenMode;
-      document.getElementById('unevenBtn').textContent = unevenMode ? "Back to Equal Split" : "Switch to Uneven Split";
-      renderMembers();
+    function renderExpenses() {
+      const container = document.getElementById('expensesList');
+      container.innerHTML = group.expenses.sort((a,b) => new Date(b.date) - new Date(a.date)).map(exp => `
+        <div class="bg-zinc-900 rounded-3xl p-8">
+          <div class="flex justify-between items-start mb-4">
+            <div>
+              <h4 class="text-xl font-semibold">${exp.name}</h4>
+              <p class="text-sm text-zinc-400">${exp.date} • Added by ${exp.addedBy}</p>
+            </div>
+            <p class="text-2xl font-bold">रू ${exp.amount.toLocaleString()}</p>
+          </div>
+          <div class="flex items-center gap-4">
+            <span class="px-4 py-1 rounded-full text-xs font-medium ${
+              exp.status === 'approved' ? 'bg-emerald-500/10 text-emerald-400' :
+              exp.status === 'flagged' ? 'bg-red-500/10 text-red-400' :
+              'bg-yellow-500/10 text-yellow-400'
+            }">${exp.status.charAt(0).toUpperCase() + exp.status.slice(1)}</span>
+            ${exp.status === 'pending' && exp.addedBy !== currentUser ? `
+              <button onclick="approveExpense(${exp.id})" class="text-emerald-400 hover:text-emerald-300"><i class="fas fa-check"></i> Approve</button>
+              <button onclick="openFlagModal(${exp.id})" class="text-red-400 hover:text-red-300"><i class="fas fa-flag"></i> Flag</button>
+            ` : ''}
+          </div>
+          ${exp.flagRemark ? `<p class="mt-4 text-sm text-red-400">Flag remark: ${exp.flagRemark}</p>` : ''}
+        </div>
+      `).join('') || '<p class="text-center text-zinc-400 py-12">No expenses yet</p>';
+    }
+
+    function renderHeader() {
+      document.getElementById('headerInfo').innerHTML = `
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 w-full">
+          <div>
+            <h1 class="text-5xl font-bold">${group.title}</h1>
+            <p class="text-6xl font-bold text-violet-400 mt-3">रू ${group.total.toLocaleString()}</p>
+          </div>
+          <div class="flex items-center gap-4">
+            <div class="bg-emerald-500/10 text-emerald-400 px-6 py-3 rounded-3xl">${group.members.filter(m=>m.accepted).length} members</div>
+            <button onclick="exportToPDF()" class="bg-white text-black px-8 py-4 rounded-3xl font-semibold flex items-center gap-3 hover:bg-violet-500 hover:text-white transition">
+              <i class="fas fa-download"></i> Export PDF
+            </button>
+            <button onclick="exportGroup()" class="bg-violet-600 px-8 py-4 rounded-3xl font-semibold hover:bg-violet-500 transition">
+              Export JSON
+            </button>
+          </div>
+        </div>`;
+    }
+
+    function exportToPDF() {
+      const element = document.createElement('div');
+      element.innerHTML = `
+        <div style="padding:40px; font-family:Arial; color:#111;">
+          <h1 style="font-size:28px; margin-bottom:20px;">${group.title}</h1>
+          <h2 style="font-size:48px; color:#7c3aed;">रू ${group.total}</h2>
+          <p style="margin:30px 0 10px; font-size:18px;">Expenses</p>
+          <table style="width:100%; border-collapse:collapse;">
+            ${group.expenses.map(e => `
+              <tr>
+                <td>${e.date} • ${e.name}</td>
+                <td style="text-align:right;">रू ${e.amount}</td>
+              </tr>
+            `).join('')}
+          </table>
+          <p style="margin:30px 0 10px; font-size:18px;">Member Shares</p>
+          <table style="width:100%; border-collapse:collapse;">
+            ${group.members.filter(m => m.accepted).map(m => `
+              <tr>
+                <td>${m.user}</td>
+                <td style="text-align:right;">रू ${unevenMode ? (group.customShares ? group.customShares[m.user] : 0) : Math.round(group.total / group.members.filter(mm => mm.accepted).length)}</td>
+              </tr>
+            `).join('')}
+          </table>
+        </div>`;
+      
+      html2pdf().from(element).set({
+        margin: 1,
+        filename: `${group.title}-split.pdf`,
+        html2canvas: { scale: 2 },
+        jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
+      }).save();
+      
+      showToast('PDF downloaded!');
+    }
+
+    function exportGroup() {
+      const blob = new Blob([JSON.stringify(group)], {type: 'application/json'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${group.title}.json`;
+      a.click();
+      showToast('Group exported as JSON');
+    }
+
+    function renderSummary() {
+      const accepted = group.members.filter(m => m.accepted).length;
+      const share = unevenMode && group.customShares ? (group.customShares[currentUser] || 0) : Math.round(group.total / accepted);
+      document.getElementById('summaryBox').textContent = `रू ${group.total.toLocaleString()}`;
+      document.getElementById('fairShareText').innerHTML = `Your share: <span class="text-emerald-400 font-bold">रू ${share.toLocaleString()}</span>`;
     }
 
     function renderMembers() {
       const container = document.getElementById('membersList');
-      const acceptedMembers = group.members.filter(m => m.accepted);
-      const equalShare = Math.round(group.total / acceptedMembers.length);
-
-      container.innerHTML = acceptedMembers.map(m => {
-        let share = equalShare;
-        // Simple demo uneven support (you can extend with localStorage later)
+      const accepted = group.members.filter(m => m.accepted);
+      container.innerHTML = accepted.map(m => {
+        const share = unevenMode && group.customShares ? group.customShares[m.user] : Math.round(group.total / accepted.length);
         return `
-          <div class="bg-zinc-900 rounded-3xl p-8">
-            <div class="flex items-center justify-between">
-              <div class="flex items-center gap-4">
-                <i class="fas fa-user text-4xl text-violet-400"></i>
-                <div>
-                  <div class="font-semibold text-xl">${m.user}</div>
-                  <div class="text-xs text-emerald-400">Accepted</div>
-                </div>
+          <div class="bg-zinc-800 rounded-2xl p-6 flex justify-between items-center">
+            <div class="flex items-center gap-4">
+              <i class="fas fa-user-circle text-4xl text-violet-400"></i>
+              <div>
+                <p class="font-medium">${m.user}</p>
+                <p class="text-xs text-zinc-400">${m.user === group.creator ? 'Creator' : 'Member'}</p>
               </div>
-              <div class="text-right">
-                <div class="text-4xl font-bold text-emerald-400">रू ${share}</div>
-                <div class="text-xs text-zinc-400">${unevenMode ? "Custom" : "Equal"}</div>
-              </div>
+            </div>
+            <div class="text-right">
+              ${unevenMode ? `
+                <input type="number" value="${share}" onchange="updateCustomShare('${m.user}', this.value)" class="bg-zinc-800 text-4xl font-bold text-emerald-400 w-40 text-right px-4 py-2 rounded-2xl focus:outline-none focus:border-violet-500">
+              ` : `
+                <div class="text-4xl font-bold text-emerald-400">रू ${share.toLocaleString()}</div>
+              `}
+              <div class="text-xs text-zinc-400">${unevenMode ? "Custom" : "Equal"}</div>
             </div>
           </div>
         `;
       }).join('');
     }
 
+    function toggleUnevenMode() {
+      unevenMode = !unevenMode;
+      document.getElementById('unevenBtn').textContent = unevenMode ? "Back to Equal Split" : "Switch to Uneven Split";
+      if (unevenMode && !group.customShares) {
+        group.customShares = {};
+        const accepted = group.members.filter(m => m.accepted);
+        const equal = Math.round(group.total / accepted.length);
+        accepted.forEach(m => group.customShares[m.user] = equal);
+      }
+      localStorage.setItem('groups', JSON.stringify(groups));
+      renderMembers();
+      renderSummary();
+      logTimeline(`${currentUser} toggled to ${unevenMode ? 'uneven' : 'equal'} split`);
+    }
+
+    function updateCustomShare(username, newAmount) {
+      if (!group.customShares) group.customShares = {};
+      group.customShares[username] = parseFloat(newAmount) || 0;
+      localStorage.setItem('groups', JSON.stringify(groups));
+      renderMembers();
+      renderSummary();
+      logTimeline(`${currentUser} updated share for ${username} to रू ${newAmount}`);
+    }
+
+    function renderBalances() {
+      const container = document.getElementById('balancesOverview');
+      const accepted = group.members.filter(m => m.accepted).map(m => m.user);
+      const balances = {};
+      accepted.forEach(u => balances[u] = 0);
+
+      group.expenses.forEach(exp => {
+        if (exp.status === 'approved') {
+          const share = unevenMode && group.customShares ? (group.customShares[exp.addedBy] / group.total * exp.amount) : (exp.amount / accepted.length);
+          accepted.forEach(u => {
+            if (u === exp.addedBy) balances[u] += exp.amount - (exp.amount - share * (accepted.length - 1));
+            else balances[u] -= share;
+          });
+        }
+      });
+
+      (group.payments || []).forEach(p => {
+        balances[p.from] -= p.amount;
+        balances[p.to] += p.amount;
+      });
+
+      container.innerHTML = accepted.map(u => `
+        <div class="flex justify-between p-4 bg-zinc-800 rounded-xl">
+          <span>${u}</span>
+          <span class="${balances[u] > 0 ? 'text-green-400' : balances[u] < 0 ? 'text-red-400' : 'text-zinc-400'}">रू ${balances[u].toLocaleString()}</span>
+        </div>
+      `).join('');
+
+      const opts = accepted.map(u => `<option value="${u}">${u}</option>`).join('');
+      document.getElementById('payFrom').innerHTML = opts;
+      document.getElementById('payTo').innerHTML = opts;
+    }
+
+    function logPayment() {
+      const from = document.getElementById('payFrom').value;
+      const to = document.getElementById('payTo').value;
+      const amount = parseFloat(document.getElementById('payAmount').value) || 0;
+
+      if (!from || !to || amount <= 0 || from === to) return showToast('Invalid payment', true);
+
+      if (!group.payments) group.payments = [];
+      group.payments.push({from, to, amount, date: new Date().toISOString().split('T')[0]});
+      logTimeline(`Payment of रू ${amount} from ${from} to ${to} by ${currentUser}`);
+      localStorage.setItem('groups', JSON.stringify(groups));
+      renderBalances();
+      renderSummary();
+      showToast('Payment logged');
+      document.getElementById('payAmount').value = '';
+    }
+
+    function logTimeline(action) {
+      if (!group.timeline) group.timeline = [];
+      group.timeline.push({action, by: currentUser, timestamp: Date.now()});
+    }
+
+    function renderTimeline() {
+      const container = document.getElementById('timelineList');
+      const search = document.getElementById('timelineSearch').value.toLowerCase();
+      const filter = document.getElementById('timelineFilter').value;
+
+      let filtered = (group.timeline || []).slice().sort((a,b) => b.timestamp - a.timestamp);
+      if (search) filtered = filtered.filter(t => t.action.toLowerCase().includes(search));
+      // Basic filter placeholder
+      if (filter === 'member') filtered = filtered.filter(t => t.by === currentUser); // Example
+
+      container.innerHTML = filtered.map(t => `
+        <div class="bg-zinc-800 p-4 rounded-xl">
+          <p>${t.action}</p>
+          <p class="text-xs text-zinc-400">By ${t.by} • ${new Date(t.timestamp).toLocaleString()}</p>
+        </div>
+      `).join('') || '<p class="text-center text-zinc-400 py-12">No activity yet</p>';
+    }
+
+    function checkRecurrings() {
+      if (!group.recurrings) return;
+      const today = new Date();
+      group.recurrings.forEach(r => {
+        let next = new Date(r.nextDate);
+        while (next < today) {
+          const expense = {id: Date.now(), name: r.name, amount: r.amount, date: next.toISOString().split('T')[0], addedBy: 'system', status: 'pending', approvedBy: [], flaggedBy: [], flagRemark: ''};
+          group.expenses.push(expense);
+          group.total += r.amount;
+          logTimeline(`Recurring expense "${r.name}" auto-added`);
+          next = new Date(next);
+          next.setDate(next.getDate() + (r.freq === 'weekly' ? 7 : 30));
+          r.nextDate = next.toISOString().split('T')[0];
+        }
+      });
+      localStorage.setItem('groups', JSON.stringify(groups));
+    }
+
     function sendInvite() {
       const username = document.getElementById('inviteUsername').value.trim();
-      if (!username) return showToast("Please enter a username");
+      if (!username) return showToast('Enter username', true);
 
       let allInvites = JSON.parse(localStorage.getItem('allInvites') || '{}');
       if (!allInvites[username]) allInvites[username] = [];
-      allInvites[username].push({
-        id: group.id,
-        title: group.title,
-        from: currentUser
-      });
+      allInvites[username].push({id: group.id, title: group.title, from: currentUser});
       localStorage.setItem('allInvites', JSON.stringify(allInvites));
 
+      logTimeline(`Invite sent to ${username}`);
       showToast(`Invite sent to ${username}`);
       document.getElementById('inviteUsername').value = '';
+      if (Notification.permission === 'granted') {
+        new Notification('Splitly: Invite Sent', {body: `Invited ${username} to ${group.title}`});
+      }
     }
 
-    // Initial render
+    // Initial load
     function init() {
+      checkRecurrings();
+      renderHeader();
       renderExpenses();
+      renderSummary();
       renderMembers();
+      renderBalances();
+      renderTimeline();
     }
+    init();
 
-    // Keyboard support for modal
+    // Listeners
+    document.getElementById('timelineSearch').addEventListener('input', renderTimeline);
+    document.getElementById('timelineFilter').addEventListener('change', renderTimeline);
+
+    // Keyboard for modals
     document.addEventListener('keydown', e => {
       if (e.key === "Escape") closeFlagModal();
     });
-
-    init();
   </script>
 </body>
 </html>

@@ -118,25 +118,45 @@
     <!-- Header -->
     <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
       <div>
-        <h1 class="text-4xl md:text-5xl font-bold">Welcome, <span id="welcomeUser"></span></h1>
-        <p class="text-zinc-400 mt-2">Manage your groups and splits effortlessly.</p>
+        <h1 class="text-4xl md:text-5xl font-bold">Dashboard</h1>
       </div>
-      <div class="flex items-center gap-4 w-full md:w-auto">
-        <input id="searchInput" type="text" placeholder="Search groups..." class="flex-1 bg-zinc-800 border border-white/10 rounded-2xl px-6 py-3 focus:outline-none focus:border-violet-500">
-        <button onclick="openCreateModal()" class="bg-violet-600 hover:bg-violet-500 px-6 py-3 rounded-3xl font-semibold text-base transition">+ New Group</button>
+      <div class="flex gap-4">
+        <button onclick="openCreateModal()" class="bg-violet-600 hover:bg-violet-500 px-6 py-3 rounded-3xl font-medium">Create Group</button>
+        <button onclick="exportAllData()" class="bg-emerald-600 hover:bg-emerald-500 px-6 py-3 rounded-3xl font-medium">Export All</button>
+        <label for="importFile" class="bg-blue-600 hover:bg-blue-500 px-6 py-3 rounded-3xl font-medium cursor-pointer">Import</label>
+        <input type="file" id="importFile" class="hidden" onchange="importData(event)" accept=".json">
       </div>
     </div>
 
-    <!-- Stats Overview -->
+    <!-- Stats Row -->
     <div id="statsRow" class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12"></div>
 
+    <!-- Search -->
+    <div class="relative mb-8">
+      <i class="fas fa-search absolute left-6 top-1/2 -translate-y-1/2 text-zinc-400"></i>
+      <input id="searchInput" placeholder="Search groups..." class="w-full bg-zinc-800 border border-white/10 rounded-2xl px-14 py-4 text-lg focus:border-violet-500 outline-none">
+    </div>
+
     <!-- Groups Container -->
-    <div id="groupsContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+    <div id="groupsContainer" class="grid grid-cols-1 md:grid-cols-3 gap-6"></div>
   </div>
 
   <script>
-    // Mobile Menu Functions
-    function toggleMobileMenu() {
+    const currentUser = localStorage.getItem('currentUser');
+    if (!currentUser) window.location.href = 'login.html';
+
+    document.querySelectorAll('#currentUserDisplay, #mobileUserName').forEach(el => el.textContent = currentUser);
+
+    function showToast(msg, isError = false) {
+      const toast = document.getElementById('toast');
+      document.getElementById('toastMessage').textContent = msg;
+      toast.classList.remove('hidden');
+      toast.classList.toggle('bg-emerald-600', !isError);
+      toast.classList.toggle('bg-red-600', isError);
+      setTimeout(() => toast.classList.add('hidden'), 3000);
+    }
+
+        function toggleMobileMenu() {
       const menu = document.getElementById('mobileMenu');
       const drawer = menu.querySelector('div');
       
@@ -154,19 +174,6 @@
       window.location.href = "index.html";
     }
 
-    // Show current user
-    const currentUser = localStorage.getItem('currentUser') || "Guest";
-    document.querySelectorAll('#currentUserDisplay, #mobileUserName, #welcomeUser').forEach(el => {
-      el.textContent = currentUser;
-    });
-
-    function showToast(msg) {
-      const toast = document.getElementById('toast');
-      document.getElementById('toastMessage').textContent = msg;
-      toast.classList.remove('hidden');
-      setTimeout(() => toast.classList.add('hidden'), 3000);
-    }
-
     function loadStats() {
       let groups = JSON.parse(localStorage.getItem('groups') || '[]');
       const myGroups = groups.filter(g => g.members.some(m => m.user === currentUser && m.accepted));
@@ -181,8 +188,7 @@
         { label: 'Active Members', value: totalMembers, icon: 'fa-user-friends' }
       ];
 
-      const container = document.getElementById('statsRow');
-      container.innerHTML = stats.map(stat => `
+      document.getElementById('statsRow').innerHTML = stats.map(stat => `
         <div class="bg-zinc-900 rounded-3xl p-6 shadow-lg hover:shadow-xl transition-shadow">
           <div class="flex items-center gap-3 mb-2">
             <i class="fas ${stat.icon} text-2xl text-violet-400"></i>
@@ -252,7 +258,6 @@
       showToast('Group deleted');
     }
 
-    // Placeholder for edit (expand as needed)
     function editGroup(id) {
       showToast('Edit functionality coming soon!');
     }
@@ -277,7 +282,10 @@
         creator: currentUser,
         members: [{ user: currentUser, accepted: true }],
         expenses: [],
-        notifications: []
+        notifications: [],
+        payments: [],
+        timeline: [{action: `Group created by ${currentUser}`, by: currentUser, timestamp: Date.now()}],
+        recurrings: []
       };
       groups.push(newGroup);
       localStorage.setItem('groups', JSON.stringify(groups));
@@ -287,12 +295,67 @@
       showToast("Group created successfully!");
     }
 
+    function exportAllData() {
+      const data = {
+        groups: JSON.parse(localStorage.getItem('groups') || '[]'),
+        allInvites: JSON.parse(localStorage.getItem('allInvites') || '{}')
+      };
+      const blob = new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'splitly-data.json';
+      a.click();
+      showToast('All data exported');
+    }
+
+    function importData(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          const data = JSON.parse(e.target.result);
+          localStorage.setItem('groups', JSON.stringify(data.groups || []));
+          localStorage.setItem('allInvites', JSON.stringify(data.allInvites || {}));
+          showToast('Data imported successfully');
+          loadStats();
+          loadGroups();
+        } catch (err) {
+          showToast('Invalid JSON file', true);
+        }
+      };
+      reader.readAsText(file);
+    }
+
     // Search listener
     document.getElementById('searchInput').addEventListener('input', (e) => loadGroups(e.target.value));
 
     // Initial load
     loadStats();
     loadGroups();
+
+    // Check recurrings for all groups on load
+    let groups = JSON.parse(localStorage.getItem('groups') || '[]');
+    groups.forEach(g => {
+      if (g.recurrings) {
+        const today = new Date();
+        g.recurrings.forEach(r => {
+          let next = new Date(r.nextDate);
+          while (next < today) {
+            const expense = {id: Date.now(), name: r.name, amount: r.amount, date: next.toISOString().split('T')[0], addedBy: 'system', status: 'pending', approvedBy: [], flaggedBy: [], flagRemark: ''};
+            g.expenses.push(expense);
+            g.total += r.amount;
+            if (!g.timeline) g.timeline = [];
+            g.timeline.push({action: `Recurring expense "${r.name}" auto-added`, by: 'system', timestamp: Date.now()});
+            next = new Date(next);
+            next.setDate(next.getDate() + (r.freq === 'weekly' ? 7 : 30));
+            r.nextDate = next.toISOString().split('T')[0];
+          }
+        });
+      }
+    });
+    localStorage.setItem('groups', JSON.stringify(groups));
   </script>
 </body>
 </html>

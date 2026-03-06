@@ -14,28 +14,51 @@
       <input id="username" placeholder="Username" class="w-full bg-zinc-800 border border-white/10 rounded-2xl px-6 py-4 mb-4 focus:outline-none focus:border-violet-500">
       <input id="password" type="password" placeholder="Password" class="w-full bg-zinc-800 border border-white/10 rounded-2xl px-6 py-4 mb-6 focus:outline-none focus:border-violet-500">
       <button onclick="login()" class="w-full bg-white text-black py-4 rounded-2xl font-semibold text-lg hover:bg-violet-500 hover:text-white transition">Log in</button>
-      <p class="text-center mt-8 text-sm">Demo users: yogesh, ram, sita, hari</p>
+      <p class="text-center mt-8 text-sm">Demo users: yogesh, ram, sita, hari (password: pass)</p>
       <p class="text-center mt-4 text-sm text-violet-400">New here? <a href="signup.html" class="underline">Sign up free</a></p>
     </div>
   </div>
 
+  <!-- TOAST (added for errors) -->
+  <div id="toast" class="hidden fixed bottom-6 right-6 bg-emerald-600 text-white px-6 py-4 rounded-3xl shadow-2xl flex items-center gap-3 z-50">
+    <i class="fas fa-check-circle"></i>
+    <span id="toastMessage" class="font-medium"></span>
+  </div>
+
   <script>
+    function showToast(msg, isError = false) {
+      const toast = document.getElementById('toast');
+      document.getElementById('toastMessage').textContent = msg;
+      toast.classList.remove('hidden');
+      toast.classList.toggle('bg-emerald-600', !isError);
+      toast.classList.toggle('bg-red-600', isError);
+      setTimeout(() => toast.classList.add('hidden'), 3000);
+    }
+
     function login() {
       const username = document.getElementById('username').value.trim();
       const password = document.getElementById('password').value;
       if (!username || !password) {
-        alert("Please enter both username and password");
+        showToast("Please enter both username and password", true);
         return;
       }
       let users = JSON.parse(localStorage.getItem('users') || '[]');
       const user = users.find(u => u.username === username && u.password === password);
       if (user) {
         localStorage.setItem('currentUser', username);
+        // New: Notification permission
+        if ('Notification' in window) {
+          Notification.requestPermission().then(perm => {
+            if (perm === 'granted') {
+              showToast('Notifications enabled!');
+            }
+          });
+        }
         window.location.href = "dashboard.html";
       } else {
-        alert("Invalid username or password");
+        showToast("Invalid username or password", true);
       }
     }
-</script>
+  </script>
 </body>
 </html>
